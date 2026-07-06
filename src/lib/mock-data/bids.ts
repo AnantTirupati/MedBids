@@ -1,0 +1,46 @@
+import { Bid, BidStatus } from "@/types";
+
+export const mockBids: Bid[] = [
+  {
+    id: "b1",
+    auction_id: "auc1",
+    pharmacy_id: "pharm1",
+    pharmacy_name: "Apollo Pharmacy",
+    pharmacy_avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuDcAFIy8qO6brIXU26lUqZ8yEvPoM3sjOsaPdIOcouQJF50FK6ukCCpcGQEmXFhYQnq5CcpJDapkCp8hElmtvDhMavZiT5Dy115WoH3468LR2c_EtDblF5OdQQnP1mUubCESQqQsJuya7VuoajPt5OJFSnk4XXf1kfn5UWwu1Wz8-1QwGesZmZWamiD1tEboBoKDTTkJA8A9ECFuw9DOGg8ZxVN1oLk9ecQ6crjfe4n3RLPxcM4-y_J",
+    pharmacy_rating: 4.8,
+    amount: 1850,
+    delivery_time: "Within 2 hours",
+    notes: "Direct home delivery with temperature control bags for Insulin.",
+    status: BidStatus.ACTIVE,
+    created_at: new Date(Date.now() - 10 * 60 * 1000).toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: "b2",
+    auction_id: "auc1",
+    pharmacy_id: "pharm2",
+    pharmacy_name: "MedPlus Pharmacy",
+    pharmacy_avatar: null,
+    pharmacy_rating: 4.6,
+    amount: 1920,
+    delivery_time: "Within 4 hours",
+    notes: "Insulin syringes included free.",
+    status: BidStatus.OUTBID,
+    created_at: new Date(Date.now() - 40 * 60 * 1000).toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: "b3",
+    auction_id: "auc1",
+    pharmacy_id: "pharm3",
+    pharmacy_name: "Netmeds Store",
+    pharmacy_avatar: null,
+    pharmacy_rating: 4.5,
+    amount: 1980,
+    delivery_time: "Next Morning",
+    notes: null,
+    status: BidStatus.OUTBID,
+    created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date().toISOString(),
+  }
+];

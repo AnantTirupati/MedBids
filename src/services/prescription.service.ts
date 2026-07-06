@@ -1,4 +1,4 @@
-import { Prescription, Medication } from "@/types";
+import { Prescription, Medication, PrescriptionStatus } from "@/types";
 import { mockPrescriptions } from "@/lib/mock-data";
 
 export const prescriptionService = {
@@ -28,7 +28,7 @@ export const prescriptionService = {
       id: `rx_new_${Math.random().toString(36).substr(2, 9)}`,
       patient_id: patientId,
       patient_name: patientName,
-      status: "pending_verification",
+      status: PrescriptionStatus.PENDING_VERIFICATION,
       prescription_image_url: null,
       doctor_name: doctorName || null,
       hospital_name: hospitalName || null,

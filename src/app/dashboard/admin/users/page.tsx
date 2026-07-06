@@ -7,12 +7,25 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { StatusBadge } from "@/components/shared/status-badge";
-import { mockPatients, mockPharmacies } from "@/lib/mock-data";
+import { useAdminDashboard } from "@/hooks/useAdminDashboard";
 
 export default function AdminUserManagementPage() {
   const [search, setSearch] = React.useState("");
-  const [patients, setPatients] = React.useState(mockPatients);
-  const [pharmacies, setPharmacies] = React.useState(mockPharmacies);
+  const { users, pharmacies, loading } = useAdminDashboard();
+  const [patients, setPatients] = React.useState<any[]>([]);
+  const [pharmaciesList, setPharmaciesList] = React.useState<any[]>([]);
+
+  React.useEffect(() => {
+    if (users.length > 0) {
+      setPatients(users);
+    }
+  }, [users]);
+
+  React.useEffect(() => {
+    if (pharmacies.length > 0) {
+      setPharmaciesList(pharmacies);
+    }
+  }, [pharmacies]);
 
   const handleToggleBlockPatient = (id: string) => {
     setPatients((prev) =>
@@ -21,7 +34,7 @@ export default function AdminUserManagementPage() {
   };
 
   const handleToggleBlockPharmacy = (id: string) => {
-    setPharmacies((prev) =>
+    setPharmaciesList((prev) =>
       prev.map((p) => (p.id === id ? { ...p, is_active: !p.is_active } : p))
     );
   };
@@ -123,7 +136,7 @@ export default function AdminUserManagementPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {pharmacies.map((pharm) => (
+              {pharmaciesList.map((pharm) => (
                 <TableRow key={pharm.id}>
                   <TableCell className="pl-0 py-4 font-semibold text-on-surface">
                     {pharm.pharmacy_name}

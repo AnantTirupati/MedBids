@@ -9,34 +9,21 @@ import { ActivityTimeline } from "@/components/shared/activity-timeline";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Progress } from "@/components/ui/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { patientService } from "@/services/patient.service";
-import { mockTimelineEvents } from "@/lib/mock-data";
-import { Prescription } from "@/types";
-
+import { usePatientDashboard } from "@/hooks/usePatientDashboard";
 export default function PatientDashboard() {
-  const [prescriptions, setPrescriptions] = React.useState<Prescription[]>([]);
-  const [loading, setLoading] = React.useState(true);
+  const {
+    loading,
+    error,
+    stats,
+    prescriptions,
+    timelineEvents,
+    refresh
+  } = usePatientDashboard("p1");
 
-  React.useEffect(() => {
-    const loadDashboardData = async () => {
-      try {
-        const data = await patientService.getPatientPrescriptions("p1");
-        setPrescriptions(data);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadDashboardData();
-  }, []);
-
-  const stats = {
-    active_prescriptions: prescriptions.length,
-    active_bids: 14,
-    accepted_offers: prescriptions.filter((r) => r.status === "offer_accepted" || r.status === "fulfilled").length,
-    estimated_savings: "₹4,250",
-  };
+  const activePrescriptions = stats?.active_prescriptions ?? 0;
+  const activeBids = stats?.active_bids ?? 0;
+  const acceptedOffersCount = stats?.accepted_offers ?? 0;
+  const estimatedSavings = stats?.estimated_savings ? `₹${stats.estimated_savings.toLocaleString()}` : "—";
 
   return (
     <div className="flex flex-col gap-stack-lg w-full">
@@ -46,7 +33,7 @@ export default function PatientDashboard() {
           Good Evening, Anant.
         </h1>
         <p className="text-body-lg text-on-surface-variant">
-          You currently have {stats.active_prescriptions} active prescriptions receiving offers.
+          You currently have {activePrescriptions} active prescriptions receiving offers.
         </p>
       </header>
 
@@ -54,22 +41,22 @@ export default function PatientDashboard() {
       <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter select-none">
         <StatCard
           label="Active Prescriptions"
-          value={stats.active_prescriptions}
+          value={activePrescriptions}
           icon={<Receipt className="w-5 h-5 text-on-surface-variant" />}
         />
         <StatCard
           label="Active Bids"
-          value={stats.active_bids}
+          value={activeBids}
           icon={<Gavel className="w-5 h-5 text-on-surface-variant" />}
         />
         <StatCard
           label="Accepted Offers"
-          value={stats.accepted_offers}
+          value={acceptedOffersCount}
           icon={<CheckCircle2 className="w-5 h-5 text-on-surface-variant" />}
         />
         <StatCard
           label="Estimated Savings"
-          value={stats.estimated_savings}
+          value={estimatedSavings}
           icon={<PiggyBank className="w-5 h-5 text-primary" />}
           highlighted
         />
@@ -174,7 +161,7 @@ export default function PatientDashboard() {
           <div className="glass-card rounded-card p-6 md:p-8 flex flex-col gap-6">
             <h3 className="text-headline-md font-semibold text-on-surface">Recent Activity</h3>
             <ActivityTimeline
-              events={mockTimelineEvents.map((evt) => ({
+              events={timelineEvents.map((evt) => ({
                 id: evt.id,
                 timeLabel: evt.relative_time,
                 title: evt.title,

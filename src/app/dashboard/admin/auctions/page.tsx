@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { CountdownTimer } from "@/components/shared/countdown-timer";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { auctionService } from "@/services/auction.service";
-import { Auction } from "@/types";
+import { Auction, AuctionStatus } from "@/types";
 
 export default function AdminAuctionMonitoringPage() {
   const [auctions, setAuctions] = React.useState<Auction[]>([]);
@@ -31,7 +31,7 @@ export default function AdminAuctionMonitoringPage() {
 
   const handlePause = (auctionId: string) => {
     setAuctions((prev) =>
-      prev.map((auc) => (auc.id === auctionId ? { ...auc, status: "cancelled" } : auc))
+      prev.map((auc) => (auc.id === auctionId ? { ...auc, status: AuctionStatus.CANCELLED } : auc))
     );
   };
 
@@ -104,17 +104,17 @@ export default function AdminAuctionMonitoringPage() {
                         {auc.lowest_bid ? `₹${auc.lowest_bid}` : "—"}
                       </TableCell>
                       <TableCell className="py-4">
-                        {auc.status === "live" ? (
+                        {auc.status === AuctionStatus.LIVE ? (
                           <CountdownTimer endTime={auc.end_time} />
                         ) : (
                           <span className="text-body-sm text-text-muted">Concluded</span>
                         )}
                       </TableCell>
                       <TableCell className="py-4">
-                        <StatusBadge status={auc.status === "live" ? "Live" : "Expired"} />
+                        <StatusBadge status={auc.status === AuctionStatus.LIVE ? "Live" : "Expired"} />
                       </TableCell>
                       <TableCell className="py-4 text-right pr-0">
-                        {auc.status === "live" ? (
+                        {auc.status === AuctionStatus.LIVE ? (
                           <Button
                             variant="secondary"
                             size="sm"

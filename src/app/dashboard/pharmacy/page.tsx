@@ -8,31 +8,15 @@ import { StatCard } from "@/components/shared/stat-card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { CountdownTimer } from "@/components/shared/countdown-timer";
 import { StatusBadge } from "@/components/shared/status-badge";
-import { pharmacyService } from "@/services/pharmacy.service";
-import { auctionService } from "@/services/auction.service";
-import { PharmacyDashboardStats, Auction } from "@/types";
+import { usePharmacyDashboard } from "@/hooks/usePharmacyDashboard";
 
 export default function PharmacyDashboard() {
-  const [stats, setStats] = React.useState<PharmacyDashboardStats | null>(null);
-  const [liveAuctions, setLiveAuctions] = React.useState<Auction[]>([]);
-  const [loading, setLoading] = React.useState(true);
-
-  React.useEffect(() => {
-    const loadDashboard = async () => {
-      try {
-        const statsData = await pharmacyService.getDashboardStats("pharm1");
-        setStats(statsData);
-
-        const auctionsData = await auctionService.getAuctions();
-        setLiveAuctions(auctionsData.filter((a) => a.status === "live"));
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadDashboard();
-  }, []);
+  const {
+    loading,
+    stats,
+    availableAuctions: liveAuctions,
+    refresh
+  } = usePharmacyDashboard("pharm1");
 
   return (
     <div className="flex flex-col gap-stack-lg w-full select-none">

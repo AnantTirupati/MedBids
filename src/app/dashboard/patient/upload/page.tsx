@@ -7,24 +7,23 @@ import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { UploadArea } from "@/components/shared/upload-area";
-import { prescriptionService } from "@/services/prescription.service";
+import { useUpload } from "@/hooks/useUpload";
 
 export default function UploadPrescriptionPage() {
   const router = useRouter();
   const [notes, setNotes] = React.useState("");
   const [file, setFile] = React.useState<File | null>(null);
-  const [loading, setLoading] = React.useState(false);
+  const { loading, uploadPrescription } = useUpload();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!file) return;
 
-    setLoading(true);
     try {
-      // Mock creating prescription
-      await prescriptionService.createPrescription(
+      await uploadPrescription(
         "p1",
         "Anant Tirupati",
+        notes,
         [
           {
             name: "Uploaded Prescription Item",
@@ -34,16 +33,11 @@ export default function UploadPrescriptionPage() {
             quantity: 1,
             frequency: null,
           },
-        ],
-        "Self Uploaded",
-        "Home",
-        notes
+        ]
       );
       router.push("/dashboard/patient");
     } catch (err) {
       console.error(err);
-    } finally {
-      setLoading(false);
     }
   };
 

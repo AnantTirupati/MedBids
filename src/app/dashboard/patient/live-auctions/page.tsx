@@ -5,27 +5,10 @@ import Link from "next/link";
 import { ArrowLeft, Gavel } from "lucide-react";
 import { AuctionCard } from "@/components/shared/auction-card";
 import { EmptyState } from "@/components/shared/empty-state";
-import { auctionService } from "@/services/auction.service";
-import { Auction } from "@/types";
+import { useAuctions } from "@/hooks/useAuctions";
 
 export default function LiveAuctionsPage() {
-  const [auctions, setAuctions] = React.useState<Auction[]>([]);
-  const [loading, setLoading] = React.useState(true);
-
-  React.useEffect(() => {
-    const loadAuctions = async () => {
-      try {
-        const data = await auctionService.getAuctions();
-        // Show only live auctions
-        setAuctions(data.filter((a) => a.status === "live"));
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadAuctions();
-  }, []);
+  const { auctions, loading } = useAuctions();
 
   return (
     <div className="flex flex-col gap-6 w-full py-4 select-none">

@@ -9,46 +9,45 @@ import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { PrescriptionCard } from "@/components/shared/prescription-card";
 import { CountdownTimer } from "@/components/shared/countdown-timer";
 import { OfferCard } from "@/components/shared/offer-card";
-import { prescriptionService } from "@/services/prescription.service";
+import { usePrescription } from "@/hooks/usePrescription";
 import { patientService } from "@/services/patient.service";
-import { Prescription, Offer } from "@/types";
+import { Offer } from "@/types";
 
 export default function PrescriptionDetailsPage() {
   const params = useParams();
   const router = useRouter();
   const prescriptionId = params.id as string;
 
-  const [prescription, setPrescription] = React.useState<Prescription | null>(null);
+  const { loading: rxLoading, prescription } = usePrescription(prescriptionId);
   const [offers, setOffers] = React.useState<Offer[]>([]);
-  const [loading, setLoading] = React.useState(true);
+  const [offersLoading, setOffersLoading] = React.useState(true);
 
   React.useEffect(() => {
-    const loadDetails = async () => {
+    const loadOffers = async () => {
       try {
-        const rxData = await prescriptionService.getPrescriptionById(prescriptionId);
-        setPrescription(rxData);
-
         const offersData = await patientService.getPatientOffers("p1");
-        // Filter offers matching this prescription
         setOffers(offersData.filter((o) => o.prescription_id === prescriptionId));
       } catch (err) {
         console.error(err);
       } finally {
-        setLoading(false);
+        setOffersLoading(false);
       }
     };
-    loadDetails();
-  }, [prescriptionId]);
+    if (prescription) {
+      loadOffers();
+    }
+  }, [prescription, prescriptionId]);
 
   const handleAcceptOffer = async (offerId: string) => {
     try {
       await patientService.acceptOffer(offerId);
-      // Reload details to display accepted state
       router.push("/dashboard/patient/accepted");
     } catch (err) {
       console.error(err);
     }
   };
+
+  const loading = rxLoading || (prescription ? offersLoading : false);
 
   if (loading) {
     return (

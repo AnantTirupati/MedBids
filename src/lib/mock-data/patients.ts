@@ -1,0 +1,40 @@
+import { Patient, UserRole } from "@/types";
+
+export const mockPatients: Patient[] = [
+  {
+    id: "p1",
+    email: "anant.tirupati@gmail.com",
+    phone: "+91 98765 43210",
+    role: UserRole.PATIENT,
+    full_name: "Anant Tirupati",
+    avatar_url: "https://lh3.googleusercontent.com/aida-public/AB6AXuD-yIlpi6nLlRmFhS0wTZtIFMxFiq0EWEGS9D-4LGUSq7Amss8JMSSF7IH84VPdWwWg6lHdzWvY2yDJWPN8lhy-BNee-ofpsZP6Bpr7HdNNCSL5NtVkW6Jg33nwqc_TgrBrctn5LBbsCQTHXdDsxtT5ASNOwfn_y3ku-joO8rgWe1bqJLWi1bpHR8wroCtEzi3ea8IPWHe4wPkB5Zm2O_JqlNE-xje8p6-cHrxo8hGcGNDOkFeicDL5",
+    created_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date().toISOString(),
+    is_active: true,
+    date_of_birth: "1994-05-12",
+    address: "Flat 402, Block A, Premium Residency, Jubilee Hills",
+    city: "Hyderabad",
+    state: "Telangana",
+    pincode: "500033",
+    membership_tier: "premium",
+    total_savings: 4250,
+  },
+  {
+    id: "p2",
+    email: "alexander.voss@gmail.com",
+    phone: "+91 99999 88888",
+    role: UserRole.PATIENT,
+    full_name: "Alexander Voss",
+    avatar_url: null,
+    created_at: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date().toISOString(),
+    is_active: true,
+    date_of_birth: "1988-11-20",
+    address: "12/A Park Street",
+    city: "Kolkata",
+    state: "West Bengal",
+    pincode: "700016",
+    membership_tier: "free",
+    total_savings: 1200,
+  }
+];

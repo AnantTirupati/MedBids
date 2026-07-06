@@ -7,26 +7,14 @@ import { Button } from "@/components/ui/button";
 import { StatCard } from "@/components/shared/stat-card";
 import { ChartCard } from "@/components/shared/chart-card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { adminService } from "@/services/admin.service";
-import { AdminDashboardStats } from "@/types";
+import { useAdminDashboard } from "@/hooks/useAdminDashboard";
 
 export default function AdminDashboard() {
-  const [stats, setStats] = React.useState<AdminDashboardStats | null>(null);
-  const [loading, setLoading] = React.useState(true);
-
-  React.useEffect(() => {
-    const loadAdminStats = async () => {
-      try {
-        const statsData = await adminService.getDashboardStats();
-        setStats(statsData);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadAdminStats();
-  }, []);
+  const {
+    loading,
+    stats,
+    refresh
+  } = useAdminDashboard();
 
   const pendingActions = [
     { id: "act1", type: "Pharmacy Verification", name: "Wellness Forever Shop", detail: "Drug license copy submitted", date: "Just Now", link: "/dashboard/admin/pharmacy-verification" },

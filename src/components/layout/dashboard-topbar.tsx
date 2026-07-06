@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { Bell, Menu, User, LogOut, Settings } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { NotificationPanel } from "@/components/shared/notification-panel";
-import { Notification } from "@/types";
+import { Notification, NotificationType } from "@/types";
 import { cn } from "@/lib/utils";
 
 interface DashboardTopbarProps {
@@ -25,7 +25,7 @@ export function DashboardTopbar({ role, onMobileMenuToggle, className }: Dashboa
     {
       id: "n1",
       user_id: "u1",
-      type: "bid_received",
+      type: NotificationType.BID_RECEIVED,
       title: "New offer received",
       message: "Apollo Pharmacy submitted bid of ₹1,850 for Lantus Solostar.",
       is_read: false,
@@ -35,7 +35,7 @@ export function DashboardTopbar({ role, onMobileMenuToggle, className }: Dashboa
     {
       id: "n2",
       user_id: "u1",
-      type: "prescription_verified",
+      type: NotificationType.PRESCRIPTION_VERIFIED,
       title: "Prescription verified",
       message: "Metformin HCL 500mg has been verified by the medical team.",
       is_read: false,
@@ -45,7 +45,7 @@ export function DashboardTopbar({ role, onMobileMenuToggle, className }: Dashboa
     {
       id: "n3",
       user_id: "u1",
-      type: "system",
+      type: NotificationType.SYSTEM,
       title: "System Maintenance",
       message: "Platform services will undergo scheduled upgrades tonight at 12 AM.",
       is_read: true,
