@@ -32,7 +32,16 @@ export function usePrescription(prescriptionId?: string) {
   }, [prescriptionId]);
 
   React.useEffect(() => {
-    loadData();
+    let ignore = false;
+    const run = async () => {
+      if (!ignore) {
+        await loadData();
+      }
+    };
+    run();
+    return () => {
+      ignore = true;
+    };
   }, [loadData]);
 
   const createPrescription = async (

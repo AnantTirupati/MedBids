@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Patient, Prescription, Offer, DashboardStats } from "@/types";
+import { Patient, Prescription, Offer, DashboardStats, ActivityItem } from "@/types";
 import { patientService } from "@/services/patient.service";
 
 export function usePatientDashboard(patientId: string) {
@@ -12,7 +12,7 @@ export function usePatientDashboard(patientId: string) {
   const [profile, setProfile] = React.useState<Patient | null>(null);
   const [prescriptions, setPrescriptions] = React.useState<Prescription[]>([]);
   const [acceptedOffers, setAcceptedOffers] = React.useState<Offer[]>([]);
-  const [timelineEvents, setTimelineEvents] = React.useState<any[]>([]);
+  const [timelineEvents, setTimelineEvents] = React.useState<ActivityItem[]>([]);
 
   const loadData = React.useCallback(async () => {
     setLoading(true);
@@ -41,7 +41,16 @@ export function usePatientDashboard(patientId: string) {
   }, [patientId]);
 
   React.useEffect(() => {
-    loadData();
+    let ignore = false;
+    const run = async () => {
+      if (!ignore) {
+        await loadData();
+      }
+    };
+    run();
+    return () => {
+      ignore = true;
+    };
   }, [loadData]);
 
   return {

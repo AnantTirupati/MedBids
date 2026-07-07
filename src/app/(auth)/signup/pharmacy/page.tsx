@@ -42,7 +42,16 @@ export default function PharmacyOnboardingPage() {
     e.preventDefault();
     if (!licenseFile) return;
 
-    // Simulate onboarding submit
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem(
+        "medbids_onboarding_pharmacy",
+        JSON.stringify({
+          ...formData,
+          licenseFileUrl: "mock_license_url",
+        })
+      );
+    }
+
     router.push("/login");
   };
 

@@ -7,18 +7,44 @@ import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ProfileCard } from "@/components/shared/profile-card";
+import { useAuth } from "@/hooks/useAuth";
 import { pharmacyService } from "@/services/pharmacy.service";
 import { Pharmacy } from "@/types";
 
 export default function PharmacyProfilePage() {
+  const { user } = useAuth();
+  const pharmacyId = user?.uid || "pharm1";
+
   const [profile, setProfile] = React.useState<Pharmacy | null>(null);
   const [loading, setLoading] = React.useState(true);
+
+  // Form states
+  const [pharmacyName, setPharmacyName] = React.useState("");
+  const [gstNumber, setGstNumber] = React.useState("");
+  const [address, setAddress] = React.useState("");
+  const [city, setCity] = React.useState("");
+  const [stateName, setStateName] = React.useState("");
+  const [pincode, setPincode] = React.useState("");
+  const [phone, setPhone] = React.useState("");
+  const [email, setEmail] = React.useState("");
+
+  const [saving, setSaving] = React.useState(false);
+  const [saveSuccess, setSaveSuccess] = React.useState(false);
+  const [saveError, setSaveError] = React.useState("");
 
   React.useEffect(() => {
     const loadProfile = async () => {
       try {
-        const data = await pharmacyService.getPharmacyProfile("pharm1");
+        const data = await pharmacyService.getPharmacyProfile(pharmacyId);
         setProfile(data);
+        setPharmacyName(data.pharmacy_name);
+        setGstNumber(data.gst_number || "");
+        setAddress(data.address);
+        setCity(data.city);
+        setStateName(data.state);
+        setPincode(data.pincode);
+        setPhone(data.phone);
+        setEmail(data.email);
       } catch (err) {
         console.error(err);
       } finally {
@@ -26,7 +52,33 @@ export default function PharmacyProfilePage() {
       }
     };
     loadProfile();
-  }, []);
+  }, [pharmacyId]);
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    setSaveSuccess(false);
+    setSaveError("");
+    try {
+      const updated = await pharmacyService.updateProfile(pharmacyId, {
+        pharmacy_name: pharmacyName,
+        gst_number: gstNumber || null,
+        address,
+        city,
+        state: stateName,
+        pincode,
+        phone,
+        email,
+      });
+      setProfile(updated);
+      setSaveSuccess(true);
+    } catch (err: unknown) {
+      const errorObj = err as Error;
+      setSaveError(errorObj?.message || "Failed to update profile settings.");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   if (loading || !profile) {
     return (
@@ -78,47 +130,74 @@ export default function PharmacyProfilePage() {
               </p>
             </div>
 
-            <form className="flex flex-col gap-4">
+            {saveSuccess && (
+              <div className="w-full p-3 rounded-lg bg-green-950/40 border border-green-500/30 text-green-200 text-body-sm text-center select-text">
+                Store settings saved successfully.
+              </div>
+            )}
+
+            {saveError && (
+              <div className="w-full p-3 rounded-lg bg-red-950/40 border border-red-500/30 text-red-200 text-body-sm text-center select-text">
+                {saveError}
+              </div>
+            )}
+
+            <form onSubmit={handleSave} className="flex flex-col gap-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1">
                   <label className="text-label-md text-on-surface-variant font-medium">Pharmacy Registered Name</label>
-                  <Input defaultValue={profile.pharmacy_name} />
+                  <Input value={pharmacyName} onChange={(e) => setPharmacyName(e.target.value)} required />
                 </div>
                 <div className="flex flex-col gap-1">
                   <label className="text-label-md text-on-surface-variant font-medium">License Registry Code</label>
-                  <Input defaultValue={profile.license_number} disabled className="opacity-70" />
+                  <Input value={profile.license_number} disabled className="opacity-70" />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1">
                   <label className="text-label-md text-on-surface-variant font-medium">GSTIN Code</label>
-                  <Input defaultValue={profile.gst_number || ""} />
+                  <Input value={gstNumber} onChange={(e) => setGstNumber(e.target.value)} placeholder="e.g. 22AAAAA0000A1Z5" />
                 </div>
                 <div className="flex flex-col gap-1">
                   <label className="text-label-md text-on-surface-variant font-medium">Store Established Year</label>
-                  <Input defaultValue={profile.established_year.toString()} disabled className="opacity-70" />
+                  <Input value={profile.established_year?.toString() || "2024"} disabled className="opacity-70" />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="flex flex-col gap-1">
+                  <label className="text-label-md text-on-surface-variant font-medium">Contact Phone</label>
+                  <Input value={phone} onChange={(e) => setPhone(e.target.value)} required />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-label-md text-on-surface-variant font-medium">Contact Email</label>
+                  <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
                 </div>
               </div>
 
               <div className="flex flex-col gap-1">
                 <label className="text-label-md text-on-surface-variant font-medium">Physical Address</label>
-                <Input defaultValue={profile.address} />
+                <Input value={address} onChange={(e) => setAddress(e.target.value)} required />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="flex flex-col gap-1">
+              <div className="grid grid-cols-3 gap-4">
+                <div className="flex flex-col gap-1 col-span-1">
                   <label className="text-label-md text-on-surface-variant font-medium">City</label>
-                  <Input defaultValue={profile.city} />
+                  <Input value={city} onChange={(e) => setCity(e.target.value)} required />
                 </div>
-                <div className="flex flex-col gap-1">
+                <div className="flex flex-col gap-1 col-span-1">
+                  <label className="text-label-md text-on-surface-variant font-medium">State</label>
+                  <Input value={stateName} onChange={(e) => setStateName(e.target.value)} required />
+                </div>
+                <div className="flex flex-col gap-1 col-span-1">
                   <label className="text-label-md text-on-surface-variant font-medium">Pincode</label>
-                  <Input defaultValue={profile.pincode} />
+                  <Input value={pincode} onChange={(e) => setPincode(e.target.value)} required />
                 </div>
               </div>
 
-              <Button type="button" variant="primary" className="h-12 w-fit mt-2">
-                Save Store Settings
+              <Button type="submit" variant="primary" className="h-12 w-fit mt-2 font-semibold" disabled={saving}>
+                {saving ? "Saving Changes..." : "Save Store Settings"}
               </Button>
             </form>
           </Card>

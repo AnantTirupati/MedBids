@@ -2,8 +2,9 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Bell, Menu, User, LogOut, Settings } from "lucide-react";
+import { authService } from "@/services/auth.service";
 import { Avatar } from "@/components/ui/avatar";
 import { NotificationPanel } from "@/components/shared/notification-panel";
 import { Notification, NotificationType } from "@/types";
@@ -17,11 +18,12 @@ interface DashboardTopbarProps {
 
 export function DashboardTopbar({ role, onMobileMenuToggle, className }: DashboardTopbarProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const [showNotifications, setShowNotifications] = React.useState(false);
   const [showProfileMenu, setShowProfileMenu] = React.useState(false);
 
   // Mock Notifications for dropdown display
-  const [notifications, setNotifications] = React.useState<Notification[]>([
+  const [notifications, setNotifications] = React.useState<Notification[]>(() => [
     {
       id: "n1",
       user_id: "u1",
@@ -152,14 +154,21 @@ export function DashboardTopbar({ role, onMobileMenuToggle, className }: Dashboa
                 <Settings className="w-4 h-4" />
                 Settings
               </Link>
-              <Link
-                href="/login"
-                onClick={() => setShowProfileMenu(false)}
-                className="flex items-center gap-2 px-3 py-2 text-body-sm text-error hover:bg-error-container/10 rounded-lg transition-colors font-semibold border-t border-[#273244]/30 mt-1 pt-2"
+              <button
+                onClick={async () => {
+                  setShowProfileMenu(false);
+                  try {
+                    await authService.signOut();
+                  } catch (err) {
+                    console.error("SignOut failed:", err);
+                  }
+                  router.push("/login");
+                }}
+                className="flex items-center gap-2 px-3 py-2 text-body-sm text-error hover:bg-error-container/10 rounded-lg transition-colors font-semibold border-t border-[#273244]/30 mt-1 pt-2 w-full text-left cursor-pointer"
               >
                 <LogOut className="w-4 h-4" />
                 Logout
-              </Link>
+              </button>
             </div>
           )}
         </div>

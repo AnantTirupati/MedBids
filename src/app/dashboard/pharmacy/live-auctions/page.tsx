@@ -34,7 +34,16 @@ export default function PharmacyLiveAuctionsPage() {
   };
 
   React.useEffect(() => {
-    loadAuctions();
+    let ignore = false;
+    const run = async () => {
+      if (!ignore) {
+        await loadAuctions();
+      }
+    };
+    run();
+    return () => {
+      ignore = true;
+    };
   }, []);
 
   const handleOpenBidModal = (auction: Auction) => {

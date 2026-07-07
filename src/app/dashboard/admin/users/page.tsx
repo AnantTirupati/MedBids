@@ -9,21 +9,27 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { StatusBadge } from "@/components/shared/status-badge";
 import { useAdminDashboard } from "@/hooks/useAdminDashboard";
 
+import { Patient, Pharmacy } from "@/types";
+
 export default function AdminUserManagementPage() {
   const [search, setSearch] = React.useState("");
   const { users, pharmacies, loading } = useAdminDashboard();
-  const [patients, setPatients] = React.useState<any[]>([]);
-  const [pharmaciesList, setPharmaciesList] = React.useState<any[]>([]);
+  const [patients, setPatients] = React.useState<Patient[]>([]);
+  const [pharmaciesList, setPharmaciesList] = React.useState<Pharmacy[]>([]);
 
   React.useEffect(() => {
     if (users.length > 0) {
-      setPatients(users);
+      Promise.resolve().then(() => {
+        setPatients(users);
+      });
     }
   }, [users]);
 
   React.useEffect(() => {
     if (pharmacies.length > 0) {
-      setPharmaciesList(pharmacies);
+      Promise.resolve().then(() => {
+        setPharmaciesList(pharmacies);
+      });
     }
   }, [pharmacies]);
 

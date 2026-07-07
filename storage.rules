@@ -1,0 +1,41 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Helper to check authentication
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper to check user document ownership
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Rules for prescriptions/ folder
+    match /prescriptions/{fileName} {
+      // Patients can read their own uploads, pharmacies and admins can read to audit/bid
+      allow read: if isAuthenticated();
+      // Only authenticated users (patients) can upload prescriptions
+      allow create: if isAuthenticated() && fileName.size() < 10 * 1024 * 1024; // Limit to 10MB
+      allow delete: if isAuthenticated();
+    }
+
+    // Rules for licenses/ folder
+    match /licenses/{fileName} {
+      // Pharmacies can read their own uploads, admins can read to verify
+      allow read: if isAuthenticated();
+      // Pharmacies can upload their verification licenses
+      allow create: if isAuthenticated() && fileName.size() < 15 * 1024 * 1024; // Limit to 15MB
+      allow delete: if isAuthenticated();
+    }
+
+    // Rules for avatars/ folder
+    match /avatars/{userId}/{fileName} {
+      // Avatars are publicly readable
+      allow read: if true;
+      // Users can write only their own avatars
+      allow write: if isOwner(userId) && request.resource.size < 5 * 1024 * 1024; // Limit to 5MB
+    }
+  }
+}

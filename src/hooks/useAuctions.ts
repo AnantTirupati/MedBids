@@ -1,9 +1,10 @@
 "use client";
 
 import * as React from "react";
-import { Auction, Bid, Offer } from "@/types";
+import { Auction, Bid } from "@/types";
 import { auctionService } from "@/services/auction.service";
 import { pharmacyService } from "@/services/pharmacy.service";
+import { auctionRepository, bidRepository } from "@/repositories";
 
 export function useAuctions(auctionId?: string) {
   const [loading, setLoading] = React.useState(true);
@@ -12,41 +13,47 @@ export function useAuctions(auctionId?: string) {
   const [auctions, setAuctions] = React.useState<Auction[]>([]);
   const [auction, setAuction] = React.useState<Auction | null>(null);
   const [bids, setBids] = React.useState<Bid[]>([]);
+  const [refreshTrigger, setRefreshTrigger] = React.useState(0);
 
-  const loadData = React.useCallback(async () => {
+  const refresh = React.useCallback(() => {
     setLoading(true);
     setError(null);
     setSuccess(false);
-    try {
-      if (auctionId) {
-        const [auctionData, bidsData] = await Promise.all([
-          auctionService.getAuction(auctionId),
-          auctionService.getAuctionHistory(auctionId),
-        ]);
-        setAuction(auctionData);
-        setBids(bidsData);
-      } else {
-        const auctionsList = await auctionService.getLiveAuctions();
-        setAuctions(auctionsList);
-      }
-      setSuccess(true);
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error("Failed to load auction data"));
-    } finally {
-      setLoading(false);
-    }
-  }, [auctionId]);
+    setRefreshTrigger((prev) => prev + 1);
+  }, []);
 
   React.useEffect(() => {
-    loadData();
-  }, [loadData]);
+    if (auctionId) {
+      const unsubAuction = auctionRepository.subscribeAuctionById(auctionId, (data: Auction | null) => {
+        setAuction(data);
+      });
+      const unsubBids = bidRepository.subscribeBidsByAuctionId(auctionId, (data: Bid[]) => {
+        const sorted = [...data].sort((a, b) => a.amount - b.amount);
+        setBids(sorted);
+        setLoading(false);
+        setSuccess(true);
+      });
+      return () => {
+        unsubAuction();
+        unsubBids();
+      };
+    } else {
+      const unsubAuctions = auctionRepository.subscribeAuctions((data: Auction[]) => {
+        setAuctions(data);
+        setLoading(false);
+        setSuccess(true);
+      });
+      return () => {
+        unsubAuctions();
+      };
+    }
+  }, [auctionId, refreshTrigger]);
 
   const placeBid = async (pharmacyId: string, amount: number, deliveryTime: string, notes?: string) => {
     if (!auctionId) return;
     setLoading(true);
     try {
       await pharmacyService.submitBid(auctionId, pharmacyId, amount, deliveryTime, notes);
-      await loadData();
     } catch (err) {
       setError(err instanceof Error ? err : new Error("Submit bid failed"));
       throw err;
@@ -59,7 +66,6 @@ export function useAuctions(auctionId?: string) {
     setLoading(true);
     try {
       const offer = await auctionService.acceptOffer(offerId);
-      await loadData();
       return offer;
     } catch (err) {
       setError(err instanceof Error ? err : new Error("Accept offer failed"));
@@ -74,7 +80,6 @@ export function useAuctions(auctionId?: string) {
     setLoading(true);
     try {
       await auctionService.cancelAuction(auctionId);
-      await loadData();
     } catch (err) {
       setError(err instanceof Error ? err : new Error("Cancel auction failed"));
       throw err;
@@ -93,7 +98,7 @@ export function useAuctions(auctionId?: string) {
     placeBid,
     acceptOffer,
     cancelAuction,
-    refresh: loadData,
+    refresh,
   };
 }
 

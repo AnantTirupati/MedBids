@@ -45,7 +45,7 @@ export default function UploadPrescriptionPage() {
     <div className="flex flex-col gap-stack-lg w-full max-w-[800px] mx-auto py-6 select-none">
       <header className="flex flex-col gap-1.5">
         <h1 className="text-display-md font-bold text-on-surface tracking-tight">
-          Upload Doctor's Prescription
+          Upload Doctor&apos;s Prescription
         </h1>
         <p className="text-body-lg text-on-surface-variant">
           Upload a clear photograph or PDF scan of your prescription. Our medical team will verify it.

@@ -97,7 +97,7 @@ export default function LandingPage() {
             </div>
             <h3 className="text-headline-sm font-semibold text-on-surface">1. Upload Prescription</h3>
             <p className="text-body-sm text-on-surface-variant leading-relaxed">
-              Securely capture and upload your doctor's prescription. Our end-to-end encrypted platform ensures your medical data remains strictly confidential.
+              Securely capture and upload your doctor&apos;s prescription. Our end-to-end encrypted platform ensures your medical data remains strictly confidential.
             </p>
           </div>
 

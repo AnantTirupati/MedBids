@@ -5,6 +5,7 @@ export enum VerificationStatus {
   UNDER_REVIEW = "under_review",
   APPROVED = "approved",
   REJECTED = "rejected",
+  SUSPENDED = "suspended",
 }
 
 export interface Pharmacy extends User {

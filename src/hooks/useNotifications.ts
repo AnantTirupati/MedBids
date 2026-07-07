@@ -5,34 +5,28 @@ import { Notification } from "@/types";
 import { notificationService } from "@/services/notification.service";
 
 export function useNotifications(userId: string) {
-  const [loading, setLoading] = React.useState(true);
+  const [loading, setLoading] = React.useState(!!userId);
   const [error, setError] = React.useState<Error | null>(null);
   const [success, setSuccess] = React.useState(false);
   const [notifications, setNotifications] = React.useState<Notification[]>([]);
 
-  const loadData = React.useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    setSuccess(false);
-    try {
-      const data = await notificationService.getNotifications(userId);
-      setNotifications(data);
-      setSuccess(true);
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error("Failed to load notifications"));
-    } finally {
-      setLoading(false);
-    }
-  }, [userId]);
-
   React.useEffect(() => {
-    loadData();
-  }, [loadData]);
+    if (!userId) {
+      return;
+    }
+
+    const unsubscribe = notificationService.subscribeNotifications(userId, (data) => {
+      setNotifications(data);
+      setLoading(false);
+      setSuccess(true);
+    });
+
+    return () => unsubscribe();
+  }, [userId]);
 
   const markAsRead = async (id: string) => {
     try {
       await notificationService.markAsRead(id);
-      await loadData();
     } catch (err) {
       setError(err instanceof Error ? err : new Error("Mark read failed"));
       throw err;
@@ -42,9 +36,26 @@ export function useNotifications(userId: string) {
   const clearAll = async () => {
     try {
       await notificationService.clearAll(userId);
-      await loadData();
     } catch (err) {
       setError(err instanceof Error ? err : new Error("Clear notifications failed"));
+      throw err;
+    }
+  };
+
+  const deleteNotification = async (id: string) => {
+    try {
+      await notificationService.deleteNotification(id);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error("Delete notification failed"));
+      throw err;
+    }
+  };
+
+  const markAllAsRead = async () => {
+    try {
+      await notificationService.markAllAsRead(userId);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error("Mark all read failed"));
       throw err;
     }
   };
@@ -55,8 +66,10 @@ export function useNotifications(userId: string) {
     success,
     notifications,
     markAsRead,
+    markAllAsRead,
     clearAll,
-    refresh: loadData,
+    deleteNotification,
+    refresh: async () => {},
   };
 }
 

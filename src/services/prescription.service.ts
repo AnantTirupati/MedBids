@@ -1,15 +1,15 @@
 import { Prescription, Medication, PrescriptionStatus } from "@/types";
-import { mockPrescriptions } from "@/lib/mock-data";
+import { prescriptionRepository } from "@/repositories";
 
 export const prescriptionService = {
   async getPrescriptions(): Promise<Prescription[]> {
     await new Promise((resolve) => setTimeout(resolve, 300));
-    return mockPrescriptions;
+    return prescriptionRepository.getPrescriptions();
   },
 
   async getPrescriptionById(id: string): Promise<Prescription> {
     await new Promise((resolve) => setTimeout(resolve, 350));
-    const rx = mockPrescriptions.find((r) => r.id === id);
+    const rx = await prescriptionRepository.getPrescriptionById(id);
     if (!rx) throw new Error("Prescription not found");
     return rx;
   },
@@ -44,8 +44,7 @@ export const prescriptionService = {
       })),
     };
 
-    mockPrescriptions.push(newRx);
-    return newRx;
+    return prescriptionRepository.createPrescription(newRx);
   },
 };
 

@@ -1,59 +1,49 @@
-import { Auction, Bid, Offer, OfferStatus, PrescriptionStatus, AuctionStatus } from "@/types";
-import { mockAuctions, mockBids, mockOffers, mockPrescriptions } from "@/lib/mock-data";
+import { Auction, Bid, Offer, AuctionStatus } from "@/types";
+import {
+  auctionRepository,
+  bidRepository,
+} from "@/repositories";
 import { getRandomDelay } from "@/utils/delay";
+import { auctionEngineService } from "@/features/auction-engine/auction-engine.service";
 
 export const auctionService = {
   async getAuctions(): Promise<Auction[]> {
     await getRandomDelay();
-    return mockAuctions;
+    return auctionRepository.getAuctions();
   },
 
   async getLiveAuctions(): Promise<Auction[]> {
     await getRandomDelay();
-    return mockAuctions.filter((a) => a.status === AuctionStatus.LIVE);
+    const auctions = await auctionRepository.getAuctions();
+    return auctions.filter((a) => a.status === AuctionStatus.LIVE);
   },
 
   async getAuction(id: string): Promise<Auction> {
     await getRandomDelay();
-    const auction = mockAuctions.find((a) => a.id === id);
+    const auction = await auctionRepository.getAuctionById(id);
     if (!auction) throw new Error("Auction not found");
     return auction;
   },
 
   async getAuctionHistory(auctionId: string): Promise<Bid[]> {
     await getRandomDelay();
-    return mockBids
-      .filter((b) => b.auction_id === auctionId)
-      .sort((a, b) => a.amount - b.amount); // Lowest bids first
+    const bids = await bidRepository.getBidsByAuctionId(auctionId);
+    return bids.sort((a, b) => a.amount - b.amount); // Lowest bids first
   },
 
   async acceptOffer(offerId: string): Promise<Offer> {
     await getRandomDelay();
-    const offer = mockOffers.find((o) => o.id === offerId);
-    if (!offer) throw new Error("Offer not found");
-
-    offer.status = OfferStatus.ACCEPTED;
-    offer.accepted_at = new Date().toISOString();
-
-    const rx = mockPrescriptions.find((r) => r.id === offer.prescription_id);
-    if (rx) {
-      rx.status = PrescriptionStatus.OFFER_ACCEPTED;
-    }
-
-    const auction = mockAuctions.find((a) => a.id === offer.auction_id);
-    if (auction) {
-      auction.status = AuctionStatus.ENDED;
-    }
-
-    return offer;
+    const result = await auctionEngineService.acceptOffer(offerId);
+    return result.offer;
   },
 
   async cancelAuction(auctionId: string): Promise<Auction> {
     await getRandomDelay();
-    const auction = mockAuctions.find((a) => a.id === auctionId);
+    const auction = await auctionRepository.getAuctionById(auctionId);
     if (!auction) throw new Error("Auction not found");
 
     auction.status = AuctionStatus.CANCELLED;
+    await auctionRepository.updateAuction(auction);
     return auction;
   },
 };

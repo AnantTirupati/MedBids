@@ -26,7 +26,16 @@ export default function PharmacyVerificationPage() {
   };
 
   React.useEffect(() => {
-    loadRequests();
+    let ignore = false;
+    const run = async () => {
+      if (!ignore) {
+        await loadRequests();
+      }
+    };
+    run();
+    return () => {
+      ignore = true;
+    };
   }, []);
 
   const handleAction = async (requestId: string, approve: boolean) => {

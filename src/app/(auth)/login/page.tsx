@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card } from "@/components/ui/card";
+import { authService } from "@/services/auth.service";
+import { userRepository } from "@/repositories";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -14,41 +16,45 @@ export default function LoginPage() {
   const [otp, setOtp] = React.useState("");
   const [otpSent, setOtpSent] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState("");
 
   const isPhoneValid = phone.replace(/\D/g, "").length >= 10;
   const isOtpValid = otp.replace(/\D/g, "").length === 6;
 
-  const handlePhoneSubmit = (e: React.FormEvent) => {
+  const handlePhoneSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isPhoneValid) return;
 
     setLoading(true);
-    // Simulate sending OTP
-    setTimeout(() => {
-      setLoading(false);
+    setError("");
+    try {
+      await authService.sendOtp(phone, "recaptcha-container");
       setOtpSent(true);
-    }, 800);
+    } catch (err: unknown) {
+      const errorObj = err as Error;
+      setError(errorObj?.message || "Failed to send verification code. Please check your number.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleLoginSubmit = (e: React.FormEvent) => {
+  const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isOtpValid) return;
 
     setLoading(true);
-    setTimeout(() => {
+    setError("");
+    try {
+      const user = await authService.verifyOtp(otp);
+      const profile = await userRepository.getProfile(user.uid);
+      const role = profile?.role || "patient";
+      router.push(`/dashboard/${role}`);
+    } catch (err: unknown) {
+      const errorObj = err as Error;
+      setError(errorObj?.message || "Verification failed. Please check the OTP code.");
+    } finally {
       setLoading(false);
-      // Route based on role
-      if (phone.includes("98765")) {
-        // Patient role login trigger
-        router.push("/dashboard/patient");
-      } else if (phone.includes("4023")) {
-        // Pharmacy role login trigger
-        router.push("/dashboard/pharmacy");
-      } else {
-        // Default patient or admin based on input
-        router.push("/dashboard/patient");
-      }
-    }, 1000);
+    }
   };
 
   return (
@@ -61,6 +67,14 @@ export default function LoginPage() {
         <h1 className="text-headline-md font-bold text-on-surface">MedBids</h1>
         <p className="text-body-sm text-on-surface-variant">Secure Marketplace Access</p>
       </div>
+
+      <div id="recaptcha-container" className="hidden"></div>
+
+      {error && (
+        <div className="w-full p-3 rounded-lg bg-red-950/40 border border-red-500/30 text-red-200 text-body-sm mb-4 text-center select-text">
+          {error}
+        </div>
+      )}
 
       {!otpSent ? (
         /* Phone Request Form */

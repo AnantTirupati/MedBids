@@ -3,12 +3,14 @@
 import * as React from "react";
 import { patientService } from "@/services/patient.service";
 
+import { Medication } from "@/types";
+
 export function useUpload() {
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<Error | null>(null);
   const [success, setSuccess] = React.useState(false);
 
-  const uploadPrescription = async (patientId: string, patientName: string, notes?: string, medications?: any[]) => {
+  const uploadPrescription = async (patientId: string, patientName: string, notes?: string, medications?: Omit<Medication, "id">[]) => {
     setLoading(true);
     setError(null);
     setSuccess(false);

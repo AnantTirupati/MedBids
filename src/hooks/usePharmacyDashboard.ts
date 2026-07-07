@@ -38,7 +38,16 @@ export function usePharmacyDashboard(pharmacyId: string) {
   }, [pharmacyId]);
 
   React.useEffect(() => {
-    loadData();
+    let ignore = false;
+    const run = async () => {
+      if (!ignore) {
+        await loadData();
+      }
+    };
+    run();
+    return () => {
+      ignore = true;
+    };
   }, [loadData]);
 
   return {

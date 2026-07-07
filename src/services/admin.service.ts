@@ -3,123 +3,62 @@ import {
   Patient,
   Pharmacy,
   VerificationRequest,
-  VerificationStatus,
   PlatformSettings,
-  PrescriptionStatus,
-  AuctionStatus
+  Prescription
 } from "@/types";
 import {
-  mockPatients,
-  mockPharmacies,
-  mockAuctions,
-  mockPrescriptions,
-  mockVerificationRequests,
-  mockPlatformSettings
-} from "@/lib/mock-data";
+  patientRepository,
+  pharmacyRepository,
+} from "@/repositories";
 import { getRandomDelay } from "@/utils/delay";
+import { verificationService } from "./verification.service";
+import { moderationService } from "./moderation.service";
+import { settingsService } from "./settings.service";
+import { analyticsService } from "./analytics.service";
 
 export const adminService = {
   async getDashboard(): Promise<AdminDashboardStats> {
     await getRandomDelay();
-    return {
-      total_users: 1240,
-      total_pharmacies: mockPharmacies.length,
-      active_auctions: mockAuctions.filter((a) => a.status === "live").length,
-      pending_verifications: mockVerificationRequests.filter((r) => r.status === VerificationStatus.PENDING).length,
-      total_prescriptions: mockPrescriptions.length,
-      revenue_this_month: 48500,
-      user_growth_percent: 12.4,
-      auction_volume_percent: 8.2,
-    };
+    return analyticsService.getAdminStats();
   },
 
   async getUsers(): Promise<Patient[]> {
     await getRandomDelay();
-    return mockPatients;
+    return patientRepository.getPatients();
   },
 
   async getPharmacies(): Promise<Pharmacy[]> {
     await getRandomDelay();
-    return mockPharmacies;
+    return pharmacyRepository.getPharmacies();
   },
 
   async getVerificationQueue(): Promise<VerificationRequest[]> {
     await getRandomDelay();
-    return mockVerificationRequests;
+    return verificationService.getRequests();
   },
 
   async approvePharmacy(requestId: string, reviewerId: string): Promise<VerificationRequest> {
     await getRandomDelay();
-    const request = mockVerificationRequests.find((r) => r.id === requestId);
-    if (!request) throw new Error("Request not found");
-
-    request.status = VerificationStatus.APPROVED;
-    request.reviewed_at = new Date().toISOString();
-    request.reviewed_by = reviewerId;
-
-    const pharm = mockPharmacies.find((p) => p.id === request.pharmacy_id);
-    if (pharm) {
-      pharm.verification_status = VerificationStatus.APPROVED;
-      pharm.is_active = true;
-    }
-
-    return request;
+    return verificationService.approvePharmacy(requestId, reviewerId);
   },
 
   async rejectPharmacy(requestId: string, reviewerId: string, notes: string): Promise<VerificationRequest> {
     await getRandomDelay();
-    const request = mockVerificationRequests.find((r) => r.id === requestId);
-    if (!request) throw new Error("Request not found");
-
-    request.status = VerificationStatus.REJECTED;
-    request.reviewed_at = new Date().toISOString();
-    request.reviewed_by = reviewerId;
-    request.notes = notes;
-
-    const pharm = mockPharmacies.find((p) => p.id === request.pharmacy_id);
-    if (pharm) {
-      pharm.verification_status = VerificationStatus.REJECTED;
-      pharm.is_active = false;
-    }
-
-    return request;
+    return verificationService.rejectPharmacy(requestId, reviewerId, notes);
   },
 
-  async moderatePrescription(rxId: string, approve: boolean, reviewerId: string): Promise<any> {
+  async moderatePrescription(rxId: string, approve: boolean, reviewerId: string): Promise<Prescription> {
     await getRandomDelay();
-    const rx = mockPrescriptions.find((r) => r.id === rxId);
-    if (!rx) throw new Error("Prescription not found");
-
     if (approve) {
-      rx.status = PrescriptionStatus.VERIFIED;
-      rx.verified_at = new Date().toISOString();
-      rx.verified_by = reviewerId;
-      
-      const newAuction = {
-        id: `auc_${Math.random().toString(36).substr(2, 9)}`,
-        prescription_id: rx.id,
-        prescription: rx,
-        status: AuctionStatus.LIVE,
-        start_time: new Date().toISOString(),
-        end_time: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-        duration_minutes: 1440,
-        total_bids: 0,
-        lowest_bid: null,
-        highest_bid: null,
-        created_at: new Date().toISOString(),
-      };
-      mockAuctions.push(newAuction);
-      rx.auction_id = newAuction.id;
-      rx.status = PrescriptionStatus.AUCTION_LIVE;
+      return moderationService.approvePrescription(rxId, reviewerId, 24); // default 24 hours
     } else {
-      rx.status = PrescriptionStatus.REJECTED;
+      return moderationService.rejectPrescription(rxId, reviewerId, "Rejected by administrator review");
     }
-    return rx;
   },
 
   async getPlatformSettings(): Promise<PlatformSettings> {
     await getRandomDelay();
-    return mockPlatformSettings;
+    return settingsService.getSettings();
   },
 };
 

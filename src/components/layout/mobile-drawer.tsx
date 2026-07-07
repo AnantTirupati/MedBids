@@ -3,6 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { authService } from "@/services/auth.service";
 import { X, LogOut, LayoutDashboard, Gavel, Receipt, PiggyBank, Settings, HelpCircle, ShieldCheck, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
@@ -106,8 +107,13 @@ export function MobileDrawer({ role, isOpen, onClose, className }: MobileDrawerP
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     onClose();
+    try {
+      await authService.signOut();
+    } catch (err) {
+      console.error("SignOut failed:", err);
+    }
     router.push("/login");
   };
 

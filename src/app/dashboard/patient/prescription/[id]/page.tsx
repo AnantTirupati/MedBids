@@ -21,6 +21,7 @@ export default function PrescriptionDetailsPage() {
   const { loading: rxLoading, prescription } = usePrescription(prescriptionId);
   const [offers, setOffers] = React.useState<Offer[]>([]);
   const [offersLoading, setOffersLoading] = React.useState(true);
+  const [endTime] = React.useState(() => new Date(Date.now() + 15 * 60 * 1000).toISOString());
 
   React.useEffect(() => {
     const loadOffers = async () => {
@@ -111,7 +112,7 @@ export default function PrescriptionDetailsPage() {
                 <div className="flex justify-between items-center py-2 border-b border-[#273244]/30">
                   <span className="text-body-sm text-on-surface-variant">Auction Ends In</span>
                   {/* Mock countdown for Lantus Solostar end date */}
-                  <CountdownTimer endTime={new Date(Date.now() + 15 * 60 * 1000).toISOString()} />
+                  <CountdownTimer endTime={endTime} />
                 </div>
                 <div className="flex justify-between items-center py-2 border-b border-[#273244]/30">
                   <span className="text-body-sm text-on-surface-variant">Total Offers Received</span>

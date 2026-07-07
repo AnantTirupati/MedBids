@@ -1,37 +1,41 @@
 import { Notification } from "@/types";
-import { mockNotifications } from "@/lib/mock-data";
+import { notificationRepository } from "@/repositories";
 import { getRandomDelay } from "@/utils/delay";
 
 export const notificationService = {
   async getNotifications(userId: string): Promise<Notification[]> {
     await getRandomDelay();
-    return mockNotifications.filter((n) => n.user_id === userId);
+    return notificationRepository.getNotifications(userId);
   },
 
   async markAsRead(id: string): Promise<void> {
     await getRandomDelay();
-    const notif = mockNotifications.find((n) => n.id === id);
+    const notif = await notificationRepository.getNotificationById(id);
     if (notif) {
       notif.is_read = true;
+      await notificationRepository.updateNotification(notif);
     }
   },
 
   async markAllAsRead(userId: string): Promise<void> {
     await getRandomDelay();
-    mockNotifications
-      .filter((n) => n.user_id === userId)
-      .forEach((n) => {
-        n.is_read = true;
-      });
+    const notifs = await notificationRepository.getNotifications(userId);
+    const updated = notifs.map((n) => ({ ...n, is_read: true }));
+    await notificationRepository.updateNotifications(updated);
   },
 
   async clearAll(userId: string): Promise<void> {
     await getRandomDelay();
-    // Simulate clearing by mutating the data array contents
-    const index = mockNotifications.findIndex((n) => n.user_id === userId);
-    if (index !== -1) {
-      mockNotifications.splice(0, mockNotifications.length);
-    }
+    await notificationRepository.clearNotifications(userId);
+  },
+
+  async deleteNotification(id: string): Promise<void> {
+    await getRandomDelay();
+    await notificationRepository.deleteNotification(id);
+  },
+
+  subscribeNotifications(userId: string, callback: (notifications: Notification[]) => void): () => void {
+    return notificationRepository.subscribeNotifications(userId, callback);
   },
 };
 

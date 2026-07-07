@@ -28,7 +28,16 @@ export default function AdminPrescriptionModerationPage() {
   };
 
   React.useEffect(() => {
-    loadPrescriptions();
+    let ignore = false;
+    const run = async () => {
+      if (!ignore) {
+        await loadPrescriptions();
+      }
+    };
+    run();
+    return () => {
+      ignore = true;
+    };
   }, []);
 
   const handleModerate = async (rxId: string, approve: boolean) => {

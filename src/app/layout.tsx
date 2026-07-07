@@ -1,16 +1,7 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+const geistSans = { variable: "font-sans" };
+const geistMono = { variable: "font-mono" };
 
 export const metadata: Metadata = {
   title: {
@@ -30,6 +21,8 @@ export const metadata: Metadata = {
   ],
 };
 
+import { AuthProvider } from "@/providers/AuthProvider";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -42,7 +35,7 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-screen bg-background text-on-surface font-sans antialiased">
-        {children}
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );

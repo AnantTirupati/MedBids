@@ -15,6 +15,8 @@ export * from "./reservation";
 export * from "./notification";
 export * from "./analytics";
 export * from "./settings";
+export * from "./audit";
+
 
 // Re-export specific navigation structures if used by layouts
 export interface NavItem {

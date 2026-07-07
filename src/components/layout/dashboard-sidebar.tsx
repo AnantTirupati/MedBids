@@ -3,6 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { authService } from "@/services/auth.service";
 import {
   LayoutDashboard,
   Gavel,
@@ -114,7 +115,12 @@ export function DashboardSidebar({ role, className }: DashboardSidebarProps) {
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await authService.signOut();
+    } catch (err) {
+      console.error("SignOut failed:", err);
+    }
     router.push("/login");
   };
 
