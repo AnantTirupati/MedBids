@@ -23,6 +23,12 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
+    // Helper function to check if the authenticated user is a pharmacy
+    function isPharmacy() {
+      return isAuthenticated() && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'pharmacy';
+    }
+
     // Rules for USERS collection (Patients profiles)
     match /users/{userId} {
       allow read, write: if isOwner(userId) || isAdmin();
@@ -74,7 +80,8 @@ service cloud.firestore {
       allow read: if isAuthenticated() && (
         resource.data.pharmacy_id == request.auth.uid ||
         resource.data.patient_id == request.auth.uid ||
-        isAdmin()
+        isAdmin() ||
+        isPharmacy()
       );
       // Pharmacies can place and modify only their own bids
       allow create: if isAuthenticated() && (
