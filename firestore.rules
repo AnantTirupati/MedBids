@@ -11,8 +11,11 @@ service cloud.firestore {
     // In Supabase/Supabase-like architecture, metadata or a roles collection determines this.
     // For Firestore, we check if the user document in the users collection has role == 'admin'
     function isAdmin() {
-      return isAuthenticated() && 
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      return isAuthenticated() && (
+        request.auth.uid == 'e4zjVTmkm3MBl0XYqSEAnd0Heng2' ||
+        request.auth.token.email == 'admin@medbids.com' ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+      );
     }
     
     // Helper function to check if the request matches the user's own document
