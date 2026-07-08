@@ -36,6 +36,34 @@ export default function PharmacyBidsAnalyticsPage() {
     loadBidsData();
   }, [pharmacyId, user?.uid]);
 
+  // Calculate dynamic 7-day bid traffic data for chart
+  const { chartData, chartLabels } = React.useMemo(() => {
+    const days = 7;
+    const data: number[] = [];
+    const labels: string[] = [];
+    
+    const now = new Date();
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
+      const dateStr = d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+      labels.push(dateStr);
+      
+      // Count bids placed on this calendar day
+      const count = bids.filter((b) => {
+        if (!b.created_at) return false;
+        const bDate = new Date(b.created_at);
+        return (
+          bDate.getDate() === d.getDate() &&
+          bDate.getMonth() === d.getMonth() &&
+          bDate.getFullYear() === d.getFullYear()
+        );
+      }).length;
+      data.push(count);
+    }
+    
+    return { chartData: data, chartLabels: labels };
+  }, [bids]);
+
   return (
     <div className="flex flex-col gap-6 w-full py-4 select-none">
       {/* Header breadcrumb */}
@@ -66,6 +94,8 @@ export default function PharmacyBidsAnalyticsPage() {
           <ChartCard
             title="Bidding Conversion"
             description="Comparison of bids placed vs successful orders reserved this month."
+            data={chartData}
+            labels={chartLabels}
           />
         </div>
 
