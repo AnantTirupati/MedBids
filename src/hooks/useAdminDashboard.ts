@@ -1,10 +1,11 @@
 "use client";
 
 import * as React from "react";
-import { AdminDashboardStats, Patient, Pharmacy, VerificationRequest, PlatformSettings } from "@/types";
+import { AdminDashboardStats, Patient, Pharmacy, VerificationRequest, PlatformSettings, Prescription, Bid } from "@/types";
 import { adminService } from "@/services/admin.service";
 import { analyticsService } from "@/services/analytics.service";
 import { verificationService } from "@/services/verification.service";
+import { prescriptionRepository, bidRepository } from "@/repositories";
 
 export function useAdminDashboard() {
   const [loading, setLoading] = React.useState(true);
@@ -14,21 +15,27 @@ export function useAdminDashboard() {
   const [users, setUsers] = React.useState<Patient[]>([]);
   const [pharmacies, setPharmacies] = React.useState<Pharmacy[]>([]);
   const [verificationQueue, setVerificationQueue] = React.useState<VerificationRequest[]>([]);
+  const [prescriptions, setPrescriptions] = React.useState<Prescription[]>([]);
+  const [bids, setBids] = React.useState<Bid[]>([]);
   const [settings, setSettings] = React.useState<PlatformSettings | null>(null);
 
   const loadData = React.useCallback(async () => {
     try {
-      const [usersData, pharmaciesData, queueData, settingsData] = await Promise.all([
+      const [usersData, pharmaciesData, queueData, settingsData, rxData, bidsData] = await Promise.all([
         adminService.getUsers(),
         adminService.getPharmacies(),
         adminService.getVerificationQueue(),
         adminService.getPlatformSettings(),
+        prescriptionRepository.getPrescriptions(),
+        bidRepository.getBids(),
       ]);
 
       setUsers(usersData);
       setPharmacies(pharmaciesData);
       setVerificationQueue(queueData);
       setSettings(settingsData);
+      setPrescriptions(rxData);
+      setBids(bidsData);
       setSuccess(true);
     } catch (err) {
       setError(err instanceof Error ? err : new Error("Failed to load admin lists"));
@@ -88,6 +95,8 @@ export function useAdminDashboard() {
     users,
     pharmacies,
     verificationQueue,
+    prescriptions,
+    bids,
     settings,
     approvePharmacy,
     rejectPharmacy,

@@ -6,9 +6,33 @@ interface ChartCardProps {
   title: string;
   description?: string;
   className?: string;
+  data?: number[];
+  labels?: string[];
 }
 
-export function ChartCard({ title, description, className }: ChartCardProps) {
+export function ChartCard({ title, description, className, data, labels }: ChartCardProps) {
+  const points = React.useMemo(() => {
+    if (!data || data.length === 0) return null;
+    const maxVal = Math.max(...data, 1);
+    const xStep = 400 / Math.max(1, data.length - 1);
+    return data.map((val, idx) => {
+      const x = idx * xStep;
+      // Scale: maxVal -> y=30, 0 -> y=130 (leaving margins)
+      const y = 130 - (val / maxVal) * 100;
+      return { x, y };
+    });
+  }, [data]);
+
+  const linePath = React.useMemo(() => {
+    if (!points) return "M0,130 Q50,70 100,100 T200,50 T300,90 T400,30";
+    return points.map((p, idx) => (idx === 0 ? `M ${p.x},${p.y}` : `L ${p.x},${p.y}`)).join(" ");
+  }, [points]);
+
+  const areaPath = React.useMemo(() => {
+    if (!points) return "M0,130 Q50,70 100,100 T200,50 T300,90 T400,30 L400,160 L0,160 Z";
+    return `${linePath} L 400,160 L 0,160 Z`;
+  }, [points, linePath]);
+
   return (
     <Card className={cn("rounded-card border border-surface-card-border bg-surface-card select-none", className)}>
       <CardHeader className="pb-2">
@@ -40,13 +64,13 @@ export function ChartCard({ title, description, className }: ChartCardProps) {
 
           {/* Area fill */}
           <path
-            d="M0,130 Q50,70 100,100 T200,50 T300,90 T400,30 L400,160 L0,160 Z"
+            d={areaPath}
             fill="url(#chartGradient)"
           />
 
           {/* Line path */}
           <path
-            d="M0,130 Q50,70 100,100 T200,50 T300,90 T400,30"
+            d={linePath}
             fill="none"
             stroke="#80d5cb"
             strokeWidth="3"
@@ -54,17 +78,33 @@ export function ChartCard({ title, description, className }: ChartCardProps) {
           />
 
           {/* Glowing points */}
-          <circle cx="100" cy="100" r="4" fill="#80d5cb" className="animate-pulse" />
-          <circle cx="200" cy="50" r="4" fill="#80d5cb" className="animate-pulse" />
-          <circle cx="300" cy="90" r="4" fill="#80d5cb" className="animate-pulse" />
+          {points ? (
+            points.map((p, idx) => (
+              <circle key={idx} cx={p.x} cy={p.y} r="4" fill="#80d5cb" className="animate-pulse" />
+            ))
+          ) : (
+            <>
+              <circle cx="100" cy="100" r="4" fill="#80d5cb" className="animate-pulse" />
+              <circle cx="200" cy="50" r="4" fill="#80d5cb" className="animate-pulse" />
+              <circle cx="300" cy="90" r="4" fill="#80d5cb" className="animate-pulse" />
+            </>
+          )}
         </svg>
 
         {/* Dynamic labels overlay */}
-        <div className="absolute bottom-2 left-6 right-6 flex justify-between text-[11px] text-text-muted">
-          <span>Week 1</span>
-          <span>Week 2</span>
-          <span>Week 3</span>
-          <span>Week 4</span>
+        <div className="absolute bottom-2 left-6 right-6 flex justify-between text-[11px] text-text-muted w-[calc(100%-48px)]">
+          {labels ? (
+            labels.map((lbl, idx) => (
+              <span key={idx}>{lbl}</span>
+            ))
+          ) : (
+            <>
+              <span>Week 1</span>
+              <span>Week 2</span>
+              <span>Week 3</span>
+              <span>Week 4</span>
+            </>
+          )}
         </div>
       </CardContent>
     </Card>
