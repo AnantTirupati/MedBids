@@ -10,6 +10,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Card } from "@/components/ui/card";
 import { authService } from "@/services/auth.service";
 import { useAuth } from "@/providers/AuthProvider";
+import { userRepository, pharmacyRepository, verificationRepository } from "@/repositories";
+import { UserRole, Pharmacy, User as AppUser, VerificationRequest, VerificationStatus } from "@/types";
 
 export default function PharmacySignupPage() {
   const router = useRouter();
@@ -39,6 +41,80 @@ export default function PharmacySignupPage() {
     }
   }, []);
 
+  const createPharmacyProfile = async (uid: string, userEmail: string) => {
+    const exists = await userRepository.profileExists(uid);
+    if (exists) return;
+
+    const rawData = sessionStorage.getItem("medbids_onboarding_pharmacy");
+    if (!rawData) return;
+
+    const onboarding = JSON.parse(rawData);
+    const isoString = new Date().toISOString();
+
+    // 1. User document
+    const newUser: AppUser = {
+      id: uid,
+      email: userEmail.toLowerCase().trim(),
+      phone: phone || "",
+      role: UserRole.PHARMACY,
+      full_name: fullName.trim() || onboarding.pharmacyName,
+      avatar_url: null,
+      created_at: isoString,
+      updated_at: isoString,
+      is_active: true,
+    };
+    await userRepository.createProfile(newUser);
+
+    // 2. Pharmacy document
+    const newPharmacy: Pharmacy = {
+      id: uid,
+      email: userEmail.toLowerCase().trim(),
+      phone: phone || "",
+      role: UserRole.PHARMACY,
+      full_name: fullName.trim() || onboarding.pharmacyName,
+      avatar_url: null,
+      created_at: isoString,
+      updated_at: isoString,
+      is_active: true,
+      pharmacy_name: onboarding.pharmacyName,
+      license_number: onboarding.licenseNumber,
+      gst_number: onboarding.gstNumber || null,
+      address: onboarding.address,
+      city: onboarding.city,
+      state: "Telangana",
+      pincode: onboarding.pincode,
+      license_expiry: "2029-12-31",
+      rating: 5.0,
+      verification_status: VerificationStatus.PENDING,
+      total_bids: 0,
+      successful_bids: 0,
+      response_time_avg: "10m",
+      established_year: new Date().getFullYear(),
+    };
+    await pharmacyRepository.updatePharmacy(newPharmacy);
+
+    // 3. Verification request document
+    const newRequest: VerificationRequest = {
+      id: `ver_${Math.random().toString(36).substring(2, 11)}`,
+      pharmacy_id: uid,
+      pharmacy: newPharmacy,
+      submitted_at: isoString,
+      reviewed_at: null,
+      reviewed_by: null,
+      status: VerificationStatus.PENDING,
+      documents: {
+        license_url: onboarding.licenseFileUrl,
+        gst_certificate_url: null,
+        address_proof_url: null,
+      },
+      notes: null,
+    };
+    await verificationRepository.updateRequest(newRequest);
+
+    // Clean up onboarding session data
+    sessionStorage.removeItem("medbids_onboarding_pharmacy");
+  };
+
   const handleSignupSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!agree) {
@@ -55,6 +131,9 @@ export default function PharmacySignupPage() {
     try {
       const user = await authService.signUpWithEmail(email, password);
       
+      // Store profiles and verification requests
+      await createPharmacyProfile(user.uid, email);
+
       // Verification email dispatch
       try {
         await authService.sendEmailVerification(user);
@@ -76,7 +155,11 @@ export default function PharmacySignupPage() {
     setLoading(true);
     setError("");
     try {
-      await authService.signInWithGoogle();
+      const user = await authService.signInWithGoogle();
+      
+      // Store profiles and verification requests if onboarding data exists
+      await createPharmacyProfile(user.uid, user.email || "");
+
       await refresh();
       router.push(redirectPath);
     } catch (err: unknown) {
