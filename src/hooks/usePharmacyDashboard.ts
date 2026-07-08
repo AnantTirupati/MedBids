@@ -14,6 +14,10 @@ export function usePharmacyDashboard(pharmacyId: string) {
   const [myBids, setMyBids] = React.useState<Bid[]>([]);
 
   const loadData = React.useCallback(async () => {
+    if (!pharmacyId) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     setError(null);
     setSuccess(false);

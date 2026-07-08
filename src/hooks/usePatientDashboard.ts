@@ -15,6 +15,10 @@ export function usePatientDashboard(patientId: string) {
   const [timelineEvents, setTimelineEvents] = React.useState<ActivityItem[]>([]);
 
   const loadData = React.useCallback(async () => {
+    if (!patientId) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     setError(null);
     setSuccess(false);
