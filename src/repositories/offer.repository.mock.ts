@@ -17,7 +17,10 @@ function notifyOfferListeners(patientId: string, pharmacyId: string) {
 }
 
 export const offerRepositoryMock: OfferRepository = {
-  async getOffers(): Promise<Offer[]> {
+  async getOffers(patientId?: string): Promise<Offer[]> {
+    if (patientId) {
+      return mockOffers.filter((o) => o.patient_id === patientId);
+    }
     return mockOffers;
   },
 

@@ -6,10 +6,14 @@ import { doc, getDoc, getDocs, collection, setDoc, query, where, onSnapshot } fr
 import { mapFirebaseError } from "@/lib/firebase/errors";
 
 export const offerRepositoryFirebase: OfferRepository = {
-  async getOffers(): Promise<Offer[]> {
+  async getOffers(patientId?: string): Promise<Offer[]> {
     try {
       const colRef = collection(db, Collections.OFFERS).withConverter(createConverter<Offer>());
-      const snap = await getDocs(colRef);
+      let q = query(colRef);
+      if (patientId) {
+        q = query(colRef, where("patient_id", "==", patientId));
+      }
+      const snap = await getDocs(q);
       return snap.docs.map((d) => d.data());
     } catch (err) {
       throw mapFirebaseError(err);

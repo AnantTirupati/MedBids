@@ -36,7 +36,10 @@ export const auctionEngineRepositoryFirebase: AuctionEngineRepository = {
         };
         
         transaction.set(auctionRef, auction);
-        transaction.update(rxRef, { status: PrescriptionStatus.AUCTION_LIVE });
+        transaction.update(rxRef, { 
+          status: PrescriptionStatus.AUCTION_LIVE,
+          auction_id: auctionId 
+        });
       });
       return auction!;
     } catch (err) {

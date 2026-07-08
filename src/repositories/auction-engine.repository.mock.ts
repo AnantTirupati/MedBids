@@ -26,6 +26,7 @@ export const auctionEngineRepositoryMock: AuctionEngineRepository = {
 
     mockAuctions.push(auction);
     rx.status = PrescriptionStatus.AUCTION_LIVE;
+    rx.auction_id = auction.id;
     return auction;
   },
 

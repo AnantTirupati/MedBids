@@ -9,6 +9,8 @@ import { Avatar } from "@/components/ui/avatar";
 import { NotificationPanel } from "@/components/shared/notification-panel";
 import { Notification, NotificationType } from "@/types";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
+import { notificationService } from "@/services/notification.service";
 
 interface DashboardTopbarProps {
   role: "patient" | "pharmacy" | "admin";
@@ -21,61 +23,56 @@ export function DashboardTopbar({ role, onMobileMenuToggle, className }: Dashboa
   const router = useRouter();
   const [showNotifications, setShowNotifications] = React.useState(false);
   const [showProfileMenu, setShowProfileMenu] = React.useState(false);
+  const { user, profile } = useAuth();
 
-  // Mock Notifications for dropdown display
-  const [notifications, setNotifications] = React.useState<Notification[]>(() => [
-    {
-      id: "n1",
-      user_id: "u1",
-      type: NotificationType.BID_RECEIVED,
-      title: "New offer received",
-      message: "Apollo Pharmacy submitted bid of ₹1,850 for Lantus Solostar.",
-      is_read: false,
-      action_url: "/dashboard/patient/open-offers",
-      created_at: new Date().toISOString(),
-    },
-    {
-      id: "n2",
-      user_id: "u1",
-      type: NotificationType.PRESCRIPTION_VERIFIED,
-      title: "Prescription verified",
-      message: "Metformin HCL 500mg has been verified by the medical team.",
-      is_read: false,
-      action_url: "/dashboard/patient",
-      created_at: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
-    },
-    {
-      id: "n3",
-      user_id: "u1",
-      type: NotificationType.SYSTEM,
-      title: "System Maintenance",
-      message: "Platform services will undergo scheduled upgrades tonight at 12 AM.",
-      is_read: true,
-      action_url: null,
-      created_at: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
-    },
-  ]);
+  // Real-time notifications from Firestore
+  const [notifications, setNotifications] = React.useState<Notification[]>([]);
 
-  const handleMarkRead = (id: string) => {
+  React.useEffect(() => {
+    if (!user?.uid) return;
+    const unsubscribe = notificationService.subscribeNotifications(user.uid, (notifs) => {
+      setNotifications(notifs);
+    });
+    return () => unsubscribe();
+  }, [user?.uid]);
+
+  const handleMarkRead = async (id: string) => {
     setNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, is_read: true } : n))
     );
+    try {
+      await notificationService.markAsRead(id);
+    } catch (err) {
+      console.error("Failed to mark notification as read:", err);
+    }
   };
 
-  const handleClearAll = () => {
+  const handleClearAll = async () => {
     setNotifications([]);
+    if (user?.uid) {
+      try {
+        await notificationService.clearAll(user.uid);
+      } catch (err) {
+        console.error("Failed to clear notifications:", err);
+      }
+    }
   };
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
-  const getProfileImage = () => {
-    if (role === "patient") {
-      return "https://lh3.googleusercontent.com/aida-public/AB6AXuD-yIlpi6nLlRmFhS0wTZtIFMxFiq0EWEGS9D-4LGUSq7Amss8JMSSF7IH84VPdWwWg6lHdzWvY2yDJWPN8lhy-BNee-ofpsZP6Bpr7HdNNCSL5NtVkW6Jg33nwqc_TgrBrctn5LBbsCQTHXdDsxtT5ASNOwfn_y3ku-joO8rgWe1bqJLWi1bpHR8wroCtEzi3ea8IPWHe4wPkB5Zm2O_JqlNE-xje8p6-cHrxo8hGcGNDOkFeicDL5";
-    }
-    if (role === "pharmacy") {
-      return "https://lh3.googleusercontent.com/aida-public/AB6AXuDcAFIy8qO6brIXU26lUqZ8yEvPoM3sjOsaPdIOcouQJF50FK6ukCCpcGQEmXFhYQnq5CcpJDapkCp8hElmtvDhMavZiT5Dy115WoH3468LR2c_EtDblF5OdQQnP1mUubCESQqQsJuya7VuoajPt5OJFSnk4XXf1kfn5UWwu1Wz8-1QwGesZmZWamiD1tEboBoKDTTkJA8A9ECFuw9DOGg8ZxVN1oLk9ecQ6crjfe4n3RLPxcM4-y_J";
-    }
-    return "";
+  const getProfileImage = (): string | null => {
+    // Use Firebase Auth photoURL (set by Google sign-in)
+    if (user?.photoURL) return user.photoURL;
+    // Fall back to profile avatar if stored
+    if (profile?.avatar_url) return profile.avatar_url;
+    return null;
+  };
+
+  const getInitials = (): string => {
+    const name = profile?.full_name || user?.displayName || user?.email || "";
+    const parts = name.trim().split(/\s+/);
+    if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    return name.charAt(0).toUpperCase() || "?";
   };
 
   return (
@@ -95,7 +92,7 @@ export function DashboardTopbar({ role, onMobileMenuToggle, className }: Dashboa
           </button>
         )}
         <Link href="/" className="text-headline-sm font-bold text-on-surface tracking-tight">
-          MedMarket Premium
+          MedBids
         </Link>
       </div>
 
@@ -137,9 +134,9 @@ export function DashboardTopbar({ role, onMobileMenuToggle, className }: Dashboa
           >
             <Avatar className="w-full h-full flex items-center justify-center bg-[#101419]">
               {getProfileImage() ? (
-                <img src={getProfileImage()} alt="profile" className="w-full h-full object-cover" />
+                <img src={getProfileImage()!} alt="profile" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
               ) : (
-                <User className="w-4 h-4 text-primary" />
+                <span className="font-bold text-primary text-xs">{getInitials()}</span>
               )}
             </Avatar>
           </button>

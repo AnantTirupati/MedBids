@@ -8,4 +8,9 @@ export interface AuthRepository {
   signOut(): Promise<void>;
   getCurrentUser(): FirebaseUser | null;
   onAuthStateChanged(callback: (user: FirebaseUser | null) => void): () => void;
+  signInWithEmail(email: string, password: string): Promise<FirebaseUser>;
+  signUpWithEmail(email: string, password: string): Promise<FirebaseUser>;
+  signInWithGoogle(): Promise<FirebaseUser>;
+  sendPasswordReset(email: string): Promise<void>;
+  sendEmailVerification(user: FirebaseUser): Promise<void>;
 }

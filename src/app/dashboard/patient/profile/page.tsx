@@ -11,14 +11,22 @@ import { ProfileCard } from "@/components/shared/profile-card";
 import { patientService } from "@/services/patient.service";
 import { Patient } from "@/types";
 
+import { useAuth } from "@/hooks/useAuth";
+
 export default function PatientProfilePage() {
+  const { user } = useAuth();
+  const patientId = user?.uid || "";
   const [profile, setProfile] = React.useState<Patient | null>(null);
   const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
+    if (!user?.uid) {
+      const timer = setTimeout(() => setLoading(false), 0);
+      return () => clearTimeout(timer);
+    }
     const loadProfile = async () => {
       try {
-        const data = await patientService.getPatientProfile("p1");
+        const data = await patientService.getPatientProfile(patientId);
         setProfile(data);
       } catch (err) {
         console.error(err);
@@ -27,7 +35,7 @@ export default function PatientProfilePage() {
       }
     };
     loadProfile();
-  }, []);
+  }, [patientId, user?.uid]);
 
   if (loading || !profile) {
     return (

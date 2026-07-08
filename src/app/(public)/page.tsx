@@ -2,6 +2,7 @@ import * as React from "react";
 import Link from "next/link";
 import { Upload, ArrowRight, ShieldCheck, HeartPulse, ShieldAlert, Award, Gavel } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { HeroCTA } from "@/components/shared/hero-cta";
 
 export default function LandingPage() {
   return (
@@ -38,20 +39,7 @@ export default function LandingPage() {
           </p>
 
           {/* Action CTAs */}
-          <div className="flex flex-col sm:flex-row gap-stack-sm mt-4 w-full sm:w-auto">
-            <Link href="/dashboard/patient/upload" className="w-full sm:w-auto">
-              <Button variant="primary" className="w-full h-14 px-8 text-headline-sm flex items-center justify-center gap-2">
-                <Upload className="w-5 h-5" />
-                Upload Prescription
-              </Button>
-            </Link>
-            <Link href="#how-it-works" className="w-full sm:w-auto">
-              <Button variant="secondary" className="w-full h-14 px-8 text-headline-sm flex items-center justify-center gap-2">
-                How It Works
-                <ArrowRight className="w-5 h-5" />
-              </Button>
-            </Link>
-          </div>
+          <HeroCTA />
         </div>
       </section>
 

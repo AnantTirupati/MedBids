@@ -13,7 +13,7 @@ import { Pharmacy } from "@/types";
 
 export default function PharmacyProfilePage() {
   const { user } = useAuth();
-  const pharmacyId = user?.uid || "pharm1";
+  const pharmacyId = user?.uid || "";
 
   const [profile, setProfile] = React.useState<Pharmacy | null>(null);
   const [loading, setLoading] = React.useState(true);

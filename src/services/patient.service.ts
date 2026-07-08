@@ -1,8 +1,9 @@
-import { Patient, Prescription, Offer, DashboardStats, PrescriptionStatus, Medication, ActivityItem } from "@/types";
+import { Patient, Prescription, Offer, DashboardStats, PrescriptionStatus, Medication, ActivityItem, Auction } from "@/types";
 import {
   patientRepository,
   prescriptionRepository,
   offerRepository,
+  auctionRepository,
 } from "@/repositories";
 import { getRandomDelay } from "@/utils/delay";
 
@@ -14,14 +15,31 @@ export const patientService = {
 
   async getDashboard(patientId: string): Promise<DashboardStats> {
     await getRandomDelay();
-    const rx = await prescriptionRepository.getPrescriptions();
-    const patientRx = rx.filter((r) => r.patient_id === patientId);
+    const patientRx = await prescriptionRepository.getPrescriptions(patientId);
+    const patientProfile = await patientRepository.getPatientById(patientId);
     
+    // Calculate actual active bids across the patient's live auctions
+    const liveRx = patientRx.filter((r) => r.status === "auction_live" && r.auction_id);
+    let activeBidsCount = 0;
+    
+    if (liveRx.length > 0) {
+      try {
+        const allAuctions = await auctionRepository.getAuctions();
+        const liveAuctionIds = new Set(liveRx.map((r) => r.auction_id));
+        const patientAuctions = allAuctions.filter((a: Auction) => liveAuctionIds.has(a.id));
+        activeBidsCount = patientAuctions.reduce((sum: number, a: Auction) => sum + (a.total_bids || 0), 0);
+      } catch (err) {
+        console.error("Failed to fetch auctions for dashboard stats:", err);
+      }
+    }
+
     return {
-      active_prescriptions: patientRx.length,
-      active_bids: 14, // Simulated active bids count
+      active_prescriptions: patientRx.filter(
+        (r) => r.status === "auction_live" || r.status === "verified" || r.status === "pending_verification"
+      ).length,
+      active_bids: activeBidsCount,
       accepted_offers: patientRx.filter((r) => r.status === "offer_accepted" || r.status === "fulfilled").length,
-      estimated_savings: 4250,
+      estimated_savings: patientProfile?.total_savings ?? 0,
     };
   },
 
@@ -34,8 +52,7 @@ export const patientService = {
 
   async getPrescriptions(patientId: string): Promise<Prescription[]> {
     await getRandomDelay();
-    const rx = await prescriptionRepository.getPrescriptions();
-    return rx.filter((r) => r.patient_id === patientId);
+    return prescriptionRepository.getPrescriptions(patientId);
   },
 
   async getPatientPrescriptions(patientId: string): Promise<Prescription[]> {
@@ -48,8 +65,7 @@ export const patientService = {
 
   async getPatientOffers(patientId: string): Promise<Offer[]> {
     await getRandomDelay();
-    const offers = await offerRepository.getOffers();
-    return offers.filter((o) => o.patient_id === patientId);
+    return offerRepository.getOffers(patientId);
   },
 
   async acceptOffer(offerId: string): Promise<Offer> {
@@ -58,9 +74,9 @@ export const patientService = {
 
   async getAcceptedOffers(patientId: string): Promise<Offer[]> {
     await getRandomDelay();
-    const offers = await offerRepository.getOffers();
+    const offers = await offerRepository.getOffers(patientId);
     return offers.filter(
-      (o) => o.patient_id === patientId && (o.status === "accepted" || o.status === "fulfilled")
+      (o) => o.status === "accepted" || o.status === "fulfilled"
     );
   },
 

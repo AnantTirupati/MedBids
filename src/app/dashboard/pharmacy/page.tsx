@@ -9,14 +9,18 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { CountdownTimer } from "@/components/shared/countdown-timer";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { usePharmacyDashboard } from "@/hooks/usePharmacyDashboard";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function PharmacyDashboard() {
+  const { user } = useAuth();
+  const pharmacyId = user?.uid || "";
+
   const {
     loading,
     stats,
     availableAuctions: liveAuctions,
     refresh
-  } = usePharmacyDashboard("pharm1");
+  } = usePharmacyDashboard(pharmacyId);
 
   return (
     <div className="flex flex-col gap-stack-lg w-full select-none">

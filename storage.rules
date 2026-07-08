@@ -16,8 +16,10 @@ service firebase.storage {
     match /prescriptions/{fileName} {
       // Patients can read their own uploads, pharmacies and admins can read to audit/bid
       allow read: if isAuthenticated();
-      // Only authenticated users (patients) can upload prescriptions
-      allow create: if isAuthenticated() && fileName.size() < 10 * 1024 * 1024; // Limit to 10MB
+      // Only authenticated users (patients) can upload prescriptions (PDF or Image under 10MB)
+      allow create: if isAuthenticated() && 
+                    (request.resource.contentType.matches('image/.*') || request.resource.contentType == 'application/pdf') &&
+                    request.resource.size < 10 * 1024 * 1024;
       allow delete: if isAuthenticated();
     }
 
@@ -25,8 +27,10 @@ service firebase.storage {
     match /licenses/{fileName} {
       // Pharmacies can read their own uploads, admins can read to verify
       allow read: if isAuthenticated();
-      // Pharmacies can upload their verification licenses
-      allow create: if isAuthenticated() && fileName.size() < 15 * 1024 * 1024; // Limit to 15MB
+      // Pharmacies can upload their verification licenses (PDF or Image under 15MB)
+      allow create: if isAuthenticated() && 
+                    (request.resource.contentType.matches('image/.*') || request.resource.contentType == 'application/pdf') &&
+                    request.resource.size < 15 * 1024 * 1024;
       allow delete: if isAuthenticated();
     }
 

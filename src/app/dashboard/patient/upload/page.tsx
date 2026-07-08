@@ -9,8 +9,11 @@ import { Input } from "@/components/ui/input";
 import { UploadArea } from "@/components/shared/upload-area";
 import { useUpload } from "@/hooks/useUpload";
 
+import { useAuth } from "@/hooks/useAuth";
+
 export default function UploadPrescriptionPage() {
   const router = useRouter();
+  const { user, profile } = useAuth();
   const [notes, setNotes] = React.useState("");
   const [file, setFile] = React.useState<File | null>(null);
   const { loading, uploadPrescription } = useUpload();
@@ -19,10 +22,13 @@ export default function UploadPrescriptionPage() {
     e.preventDefault();
     if (!file) return;
 
+    const patientId = user?.uid || "";
+    const patientName = profile?.full_name || user?.displayName || "Patient";
+
     try {
       await uploadPrescription(
-        "p1",
-        "Anant Tirupati",
+        patientId,
+        patientName,
         notes,
         [
           {

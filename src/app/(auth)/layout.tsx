@@ -11,7 +11,7 @@ export default function AuthLayout({
       <div className="absolute inset-0 pointer-events-none opacity-20 z-0">
         <div className="bg-gradient-to-tr from-primary-container/20 to-transparent w-full h-full" />
       </div>
-      <div className="relative z-10 w-full max-w-md">
+      <div className="relative z-10 w-full flex justify-center">
         {children}
       </div>
     </div>

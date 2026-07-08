@@ -3,7 +3,10 @@ import { mockPrescriptions } from "@/lib/mock-data";
 import { Prescription } from "@/types";
 
 export const prescriptionRepositoryMock: PrescriptionRepository = {
-  async getPrescriptions(): Promise<Prescription[]> {
+  async getPrescriptions(patientId?: string): Promise<Prescription[]> {
+    if (patientId) {
+      return mockPrescriptions.filter((r) => r.patient_id === patientId);
+    }
     return mockPrescriptions;
   },
 

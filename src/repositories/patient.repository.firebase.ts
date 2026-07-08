@@ -30,7 +30,7 @@ export const patientRepositoryFirebase: PatientRepository = {
     try {
       // In Firebase production timeline events can be queried from notifications/activity collection
       const colRef = collection(db, Collections.NOTIFICATIONS).withConverter(createConverter<ActivityItem>());
-      const q = query(colRef, where("patient_id", "==", patientId));
+      const q = query(colRef, where("user_id", "==", patientId));
       const snap = await getDocs(q);
       return snap.docs.map((d) => d.data());
     } catch (err) {

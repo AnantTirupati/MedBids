@@ -11,6 +11,12 @@ import {
   ConfirmationResult,
   User as FirebaseUser,
   RecaptchaVerifier,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider,
+  sendPasswordResetEmail,
+  sendEmailVerification as firebaseSendEmailVerification,
 } from "firebase/auth";
 import { mapFirebaseError } from "@/lib/firebase/errors";
 
@@ -99,6 +105,50 @@ export const authRepositoryFirebase: AuthRepository = {
 
   onAuthStateChanged(callback: (user: FirebaseUser | null) => void): () => void {
     return firebaseOnAuthStateChanged(auth, callback);
+  },
+
+  async signInWithEmail(email: string, password: string): Promise<FirebaseUser> {
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      return userCredential.user;
+    } catch (err) {
+      throw mapFirebaseError(err);
+    }
+  },
+
+  async signUpWithEmail(email: string, password: string): Promise<FirebaseUser> {
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      return userCredential.user;
+    } catch (err) {
+      throw mapFirebaseError(err);
+    }
+  },
+
+  async signInWithGoogle(): Promise<FirebaseUser> {
+    try {
+      const provider = new GoogleAuthProvider();
+      const userCredential = await signInWithPopup(auth, provider);
+      return userCredential.user;
+    } catch (err) {
+      throw mapFirebaseError(err);
+    }
+  },
+
+  async sendPasswordReset(email: string): Promise<void> {
+    try {
+      await sendPasswordResetEmail(auth, email);
+    } catch (err) {
+      throw mapFirebaseError(err);
+    }
+  },
+
+  async sendEmailVerification(user: FirebaseUser): Promise<void> {
+    try {
+      await firebaseSendEmailVerification(user);
+    } catch (err) {
+      throw mapFirebaseError(err);
+    }
   },
 };
 

@@ -52,11 +52,11 @@ export default function PharmacyOnboardingPage() {
       );
     }
 
-    router.push("/login");
+    router.push("/auth/pharmacy/signup");
   };
 
   return (
-    <Card className="auth-card w-full max-w-lg p-6 md:p-8 relative z-10 shadow-2xl flex flex-col bg-[#1A2332] border border-[#273244] rounded-card select-none">
+    <Card className="auth-card w-full max-w-lg p-6 md:p-8 relative z-10 shadow-2xl flex flex-col bg-[#141A24]/90 border border-outline-variant/20 rounded-2xl relative overflow-hidden backdrop-blur-md select-none">
       {/* Brand Header */}
       <div className="w-full flex flex-col items-center mb-6 text-center">
         <div className="h-12 w-12 rounded-full bg-primary-container/20 flex items-center justify-center mb-3 border border-primary/30 text-primary">
@@ -181,7 +181,7 @@ export default function PharmacyOnboardingPage() {
 
       <p className="text-body-sm text-on-surface-variant mt-6 text-center">
         Go back to{" "}
-        <Link href="/signup" className="text-primary font-semibold hover:underline">
+        <Link href="/auth" className="text-primary font-semibold hover:underline">
           Role Selection
         </Link>
       </p>

@@ -10,7 +10,19 @@ import { StatusBadge } from "@/components/shared/status-badge";
 import { Progress } from "@/components/ui/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { usePatientDashboard } from "@/hooks/usePatientDashboard";
+import { useAuth } from "@/hooks/useAuth";
+
 export default function PatientDashboard() {
+  const { user, profile } = useAuth();
+  const patientId = user?.uid || "";
+
+  const firstName = (profile?.full_name || user?.displayName || "").split(/\s+/)[0] || "there";
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good Morning";
+    if (hour < 17) return "Good Afternoon";
+    return "Good Evening";
+  };
   const {
     loading,
     error,
@@ -18,7 +30,7 @@ export default function PatientDashboard() {
     prescriptions,
     timelineEvents,
     refresh
-  } = usePatientDashboard("p1");
+  } = usePatientDashboard(patientId);
 
   const activePrescriptions = stats?.active_prescriptions ?? 0;
   const activeBids = stats?.active_bids ?? 0;
@@ -30,7 +42,7 @@ export default function PatientDashboard() {
       {/* Header section */}
       <header className="flex flex-col gap-1.5 select-none">
         <h1 className="text-display-md font-bold text-on-surface tracking-tight">
-          Good Evening, Anant.
+          {getGreeting()}, {firstName}.
         </h1>
         <p className="text-body-lg text-on-surface-variant">
           You currently have {activePrescriptions} active prescriptions receiving offers.

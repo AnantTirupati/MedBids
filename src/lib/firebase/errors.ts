@@ -16,6 +16,7 @@ export class DocumentNotFoundError extends ApplicationError {}
 export class ValidationError extends ApplicationError {}
 
 export function mapFirebaseError(error: unknown): Error {
+  console.error("[Firebase SDK Raw Error]:", error);
   if (error instanceof ApplicationError) {
     return error;
   }

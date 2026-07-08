@@ -22,6 +22,11 @@ export const metadata: Metadata = {
 };
 
 import { AuthProvider } from "@/providers/AuthProvider";
+import { ErrorBoundary } from "@/components/shared/error-boundary";
+import { OfflineIndicator } from "@/components/shared/offline-indicator";
+import { validateEnv } from "@/utils/env-validator";
+
+validateEnv();
 
 export default function RootLayout({
   children,
@@ -35,7 +40,10 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-screen bg-background text-on-surface font-sans antialiased">
-        <AuthProvider>{children}</AuthProvider>
+        <ErrorBoundary>
+          <AuthProvider>{children}</AuthProvider>
+          <OfflineIndicator />
+        </ErrorBoundary>
       </body>
     </html>
   );

@@ -12,8 +12,10 @@ import { StatusBadge } from "@/components/shared/status-badge";
 import { auctionService } from "@/services/auction.service";
 import { pharmacyService } from "@/services/pharmacy.service";
 import { Auction } from "@/types";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function PharmacyLiveAuctionsPage() {
+  const { user } = useAuth();
   const [auctions, setAuctions] = React.useState<Auction[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [selectedAuction, setSelectedAuction] = React.useState<Auction | null>(null);
@@ -59,13 +61,13 @@ export default function PharmacyLiveAuctionsPage() {
 
   const handlePlaceBid = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedAuction) return;
+    if (!selectedAuction || !user?.uid) return;
 
     setSubmitting(true);
     try {
       await pharmacyService.placeBid(
         selectedAuction.id,
-        "pharm1",
+        user.uid,
         parseFloat(bidAmount),
         deliveryTime,
         notes

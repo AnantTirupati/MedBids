@@ -20,6 +20,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { SidebarConfig, NavItem } from "@/types";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
 
 interface DashboardSidebarProps {
   role: "patient" | "pharmacy" | "admin";
@@ -29,14 +30,22 @@ interface DashboardSidebarProps {
 export function DashboardSidebar({ role, className }: DashboardSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const { user, profile } = useAuth();
+
+  // Auth-aware avatar: Google photo > stored avatar > initials
+  const avatarUrl = user?.photoURL || profile?.avatar_url || null;
+  const displayName = profile?.full_name || user?.displayName || user?.email || "User";
+  const getInitials = (name: string): string => {
+    const parts = name.trim().split(/\s+/);
+    if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    return name.charAt(0).toUpperCase() || "?";
+  };
 
   // Reusable configuration mappings
   const sidebarData: Record<typeof role, SidebarConfig> = {
     patient: {
       user: {
-        name: "Anant Tirupati",
         subtitle: "Premium Member",
-        avatar_url: "https://lh3.googleusercontent.com/aida-public/AB6AXuD-yIlpi6nLlRmFhS0wTZtIFMxFiq0EWEGS9D-4LGUSq7Amss8JMSSF7IH84VPdWwWg6lHdzWvY2yDJWPN8lhy-BNee-ofpsZP6Bpr7HdNNCSL5NtVkW6Jg33nwqc_TgrBrctn5LBbsCQTHXdDsxtT5ASNOwfn_y3ku-joO8rgWe1bqJLWi1bpHR8wroCtEzi3ea8IPWHe4wPkB5Zm2O_JqlNE-xje8p6-cHrxo8hGcGNDOkFeicDL5",
       },
       nav_items: [
         { label: "Dashboard", href: "/dashboard/patient", icon: "dashboard" },
@@ -55,9 +64,7 @@ export function DashboardSidebar({ role, className }: DashboardSidebarProps) {
     },
     pharmacy: {
       user: {
-        name: "Apollo Pharmacy",
         subtitle: "Verified Partner",
-        avatar_url: "https://lh3.googleusercontent.com/aida-public/AB6AXuDcAFIy8qO6brIXU26lUqZ8yEvPoM3sjOsaPdIOcouQJF50FK6ukCCpcGQEmXFhYQnq5CcpJDapkCp8hElmtvDhMavZiT5Dy115WoH3468LR2c_EtDblF5OdQQnP1mUubCESQqQsJuya7VuoajPt5OJFSnk4XXf1kfn5UWwu1Wz8-1QwGesZmZWamiD1tEboBoKDTTkJA8A9ECFuw9DOGg8ZxVN1oLk9ecQ6crjfe4n3RLPxcM4-y_J",
       },
       nav_items: [
         { label: "Console", href: "/dashboard/pharmacy", icon: "dashboard" },
@@ -71,9 +78,7 @@ export function DashboardSidebar({ role, className }: DashboardSidebarProps) {
     },
     admin: {
       user: {
-        name: "Admin Control",
         subtitle: "System Auditor",
-        avatar_url: "",
       },
       nav_items: [
         { label: "Control Center", href: "/dashboard/admin", icon: "dashboard" },
@@ -134,15 +139,15 @@ export function DashboardSidebar({ role, className }: DashboardSidebarProps) {
       {/* User profile card */}
       <div className="flex items-center gap-4 border-b border-outline-variant/30 pb-5">
         <Avatar className="w-12 h-12 border border-outline-variant object-cover flex items-center justify-center bg-[#1A2332]">
-          {config.user.avatar_url ? (
-            <img src={config.user.avatar_url} alt={config.user.name} className="w-full h-full object-cover" />
+          {avatarUrl ? (
+            <img src={avatarUrl} alt={displayName} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
           ) : (
-            <span className="font-bold text-primary text-body-lg">{config.user.name[0]}</span>
+            <span className="font-bold text-primary text-body-lg">{getInitials(displayName)}</span>
           )}
         </Avatar>
         <div className="overflow-hidden">
           <div className="text-headline-sm font-semibold text-primary truncate leading-snug">
-            {config.user.name}
+            {displayName}
           </div>
           <div className="text-label-md text-on-surface-variant truncate mt-0.5">
             {config.user.subtitle}

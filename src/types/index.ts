@@ -28,9 +28,7 @@ export interface NavItem {
 
 export interface SidebarConfig {
   user: {
-    name: string;
     subtitle: string;
-    avatar_url: string;
   };
   nav_items: NavItem[];
   bottom_items: NavItem[];

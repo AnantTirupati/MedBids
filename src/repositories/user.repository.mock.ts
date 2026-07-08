@@ -8,6 +8,19 @@ export const userRepositoryMock: UserRepository = {
     if (patient) return patient;
     const pharmacy = mockPharmacies.find((p) => p.id === uid);
     if (pharmacy) return pharmacy;
+    if (uid === "admin1" || uid.includes("admin")) {
+      return {
+        id: uid,
+        email: "admin@medbids.com",
+        phone: "+91 99999 99999",
+        role: UserRole.ADMIN,
+        full_name: "MedBids Admin",
+        avatar_url: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        is_active: true,
+      };
+    }
     return null;
   },
 

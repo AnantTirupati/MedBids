@@ -22,7 +22,7 @@ function PharmacyLayoutContent({ children }: { children: React.ReactNode }) {
       <MobileDrawer role="pharmacy" isOpen={isMobileOpen} onClose={closeMobile} />
 
       {/* Main Content Area */}
-      <main className="pt-16 pb-24 md:pb-12 md:pl-[280px] px-margin-mobile md:px-margin-tablet max-w-container-max mx-auto min-h-[calc(100vh-64px)] relative z-10">
+      <main className="pt-20 pb-24 md:pb-12 md:pl-[304px] px-margin-mobile md:px-margin-tablet max-w-container-max mx-auto min-h-[calc(100vh-64px)] relative z-10">
         {children}
       </main>
 

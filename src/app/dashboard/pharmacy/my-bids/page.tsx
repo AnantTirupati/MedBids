@@ -10,14 +10,22 @@ import { StatusBadge } from "@/components/shared/status-badge";
 import { pharmacyService } from "@/services/pharmacy.service";
 import { Bid } from "@/types";
 
+import { useAuth } from "@/hooks/useAuth";
+
 export default function PharmacyBidsAnalyticsPage() {
+  const { user } = useAuth();
+  const pharmacyId = user?.uid || "";
   const [bids, setBids] = React.useState<Bid[]>([]);
   const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
+    if (!user?.uid) {
+      const timer = setTimeout(() => setLoading(false), 0);
+      return () => clearTimeout(timer);
+    }
     const loadBidsData = async () => {
       try {
-        const data = await pharmacyService.getPharmacyBids("pharm1");
+        const data = await pharmacyService.getPharmacyBids(pharmacyId);
         setBids(data);
       } catch (err) {
         console.error(err);
@@ -26,7 +34,7 @@ export default function PharmacyBidsAnalyticsPage() {
       }
     };
     loadBidsData();
-  }, []);
+  }, [pharmacyId, user?.uid]);
 
   return (
     <div className="flex flex-col gap-6 w-full py-4 select-none">

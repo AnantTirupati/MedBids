@@ -13,9 +13,13 @@ import { usePrescription } from "@/hooks/usePrescription";
 import { patientService } from "@/services/patient.service";
 import { Offer } from "@/types";
 
+import { useAuth } from "@/hooks/useAuth";
+
 export default function PrescriptionDetailsPage() {
   const params = useParams();
   const router = useRouter();
+  const { user } = useAuth();
+  const patientId = user?.uid || "";
   const prescriptionId = params.id as string;
 
   const { loading: rxLoading, prescription } = usePrescription(prescriptionId);
@@ -24,9 +28,13 @@ export default function PrescriptionDetailsPage() {
   const [endTime] = React.useState(() => new Date(Date.now() + 15 * 60 * 1000).toISOString());
 
   React.useEffect(() => {
+    if (!user?.uid) {
+      const timer = setTimeout(() => setOffersLoading(false), 0);
+      return () => clearTimeout(timer);
+    }
     const loadOffers = async () => {
       try {
-        const offersData = await patientService.getPatientOffers("p1");
+        const offersData = await patientService.getPatientOffers(patientId);
         setOffers(offersData.filter((o) => o.prescription_id === prescriptionId));
       } catch (err) {
         console.error(err);
@@ -37,7 +45,7 @@ export default function PrescriptionDetailsPage() {
     if (prescription) {
       loadOffers();
     }
-  }, [prescription, prescriptionId]);
+  }, [prescription, prescriptionId, patientId, user?.uid]);
 
   const handleAcceptOffer = async (offerId: string) => {
     try {

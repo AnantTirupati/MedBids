@@ -7,17 +7,24 @@ import { ArrowLeft, PiggyBank } from "lucide-react";
 import { OfferCard } from "@/components/shared/offer-card";
 import { EmptyState } from "@/components/shared/empty-state";
 import { patientService } from "@/services/patient.service";
+import { useAuth } from "@/hooks/useAuth";
 import { Offer } from "@/types";
 
 export default function OpenOffersPage() {
   const router = useRouter();
+  const { user } = useAuth();
+  const patientId = user?.uid || "";
   const [offers, setOffers] = React.useState<Offer[]>([]);
   const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
+    if (!user?.uid) {
+      const timer = setTimeout(() => setLoading(false), 0);
+      return () => clearTimeout(timer);
+    }
     const loadOffers = async () => {
       try {
-        const data = await patientService.getPatientOffers("p1");
+        const data = await patientService.getPatientOffers(patientId);
         // Show open offers
         setOffers(data.filter((o) => o.status === "open"));
       } catch (err) {
@@ -27,7 +34,7 @@ export default function OpenOffersPage() {
       }
     };
     loadOffers();
-  }, []);
+  }, [patientId, user?.uid]);
 
   const handleAccept = async (offerId: string) => {
     try {

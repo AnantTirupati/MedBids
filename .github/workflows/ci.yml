@@ -1,0 +1,36 @@
+name: MedBids Continuous Integration
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master, develop ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-id: 20.x
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: TypeScript Type Checking
+        run: npx tsc --noEmit
+
+      - name: Run Eslint Audit
+        run: npm run lint
+
+      - name: Build Optimization Check
+        run: npm run build
+
+      - name: Run Platform Tests
+        run: npx tsx scripts/test-runner.ts

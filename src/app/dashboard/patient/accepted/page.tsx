@@ -7,16 +7,23 @@ import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { OfferCard } from "@/components/shared/offer-card";
 import { EmptyState } from "@/components/shared/empty-state";
 import { patientService } from "@/services/patient.service";
+import { useAuth } from "@/hooks/useAuth";
 import { Offer } from "@/types";
 
 export default function AcceptedReservationsPage() {
+  const { user } = useAuth();
+  const patientId = user?.uid || "";
   const [acceptedOffers, setAcceptedOffers] = React.useState<Offer[]>([]);
   const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
+    if (!user?.uid) {
+      const timer = setTimeout(() => setLoading(false), 0);
+      return () => clearTimeout(timer);
+    }
     const loadAccepted = async () => {
       try {
-        const data = await patientService.getPatientOffers("p1");
+        const data = await patientService.getPatientOffers(patientId);
         // Show accepted or fulfilled offers
         setAcceptedOffers(data.filter((o) => o.status === "accepted" || o.status === "fulfilled"));
       } catch (err) {
@@ -26,7 +33,7 @@ export default function AcceptedReservationsPage() {
       }
     };
     loadAccepted();
-  }, []);
+  }, [patientId, user?.uid]);
 
   return (
     <div className="flex flex-col gap-6 w-full py-4 select-none">
@@ -108,7 +115,7 @@ export default function AcceptedReservationsPage() {
               <div className="w-full flex flex-col gap-3 text-left border-t border-[#273244]/40 pt-4 mt-2">
                 <div className="flex items-center gap-2 text-body-sm text-on-surface-variant">
                   <MapPin className="w-4 h-4 text-primary shrink-0" />
-                  <span>Apollo Pharmacy, Jubilee Hills branch</span>
+                  <span>{acceptedOffers[0]?.pharmacy_name || "Pharmacy"}</span>
                 </div>
                 <div className="flex items-center gap-2 text-body-sm text-on-surface-variant">
                   <Calendar className="w-4 h-4 text-primary shrink-0" />

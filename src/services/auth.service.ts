@@ -21,6 +21,26 @@ export const authService = {
   onAuthStateChanged(callback: (user: FirebaseUser | null) => void): () => void {
     return authRepository.onAuthStateChanged(callback);
   },
+
+  async signInWithEmail(email: string, password: string): Promise<FirebaseUser> {
+    return authRepository.signInWithEmail(email, password);
+  },
+
+  async signUpWithEmail(email: string, password: string): Promise<FirebaseUser> {
+    return authRepository.signUpWithEmail(email, password);
+  },
+
+  async signInWithGoogle(): Promise<FirebaseUser> {
+    return authRepository.signInWithGoogle();
+  },
+
+  async sendPasswordReset(email: string): Promise<void> {
+    return authRepository.sendPasswordReset(email);
+  },
+
+  async sendEmailVerification(user: FirebaseUser): Promise<void> {
+    return authRepository.sendEmailVerification(user);
+  },
 };
 
 export default authService;

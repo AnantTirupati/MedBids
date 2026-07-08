@@ -3,13 +3,22 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X } from "lucide-react";
+import { Menu, X, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
 
 export function PublicNavbar() {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = React.useState(false);
+  const { authenticated, role } = useAuth();
+
+  const dashboardPath =
+    role === "pharmacy"
+      ? "/dashboard/pharmacy"
+      : role === "admin"
+        ? "/dashboard/admin"
+        : "/dashboard/patient";
 
   const navLinks = [
     { label: "How it Works", href: "/#how-it-works" },
@@ -46,11 +55,20 @@ export function PublicNavbar() {
         </div>
 
         <div className="flex items-center gap-4">
-          <Link href="/login">
-            <Button variant="primary" className="h-10 px-5 text-label-md">
-              Sign In
-            </Button>
-          </Link>
+          {authenticated ? (
+            <Link href={dashboardPath}>
+              <Button variant="primary" className="h-10 px-5 text-label-md bg-[#FF6B35] hover:bg-[#FF6B35]/90 border-none text-white font-bold flex items-center gap-2">
+                <LayoutDashboard className="w-4 h-4" />
+                Dashboard
+              </Button>
+            </Link>
+          ) : (
+            <Link href="/auth">
+              <Button variant="primary" className="h-10 px-5 text-label-md bg-[#FF6B35] hover:bg-[#FF6B35]/90 border-none text-white font-bold">
+                Get Started
+              </Button>
+            </Link>
+          )}
           <button
             onClick={() => setIsOpen(!isOpen)}
             className="md:hidden p-2 text-on-surface-variant hover:text-on-surface transition-colors"
@@ -73,11 +91,20 @@ export function PublicNavbar() {
               {link.label}
             </Link>
           ))}
-          <Link href="/login" onClick={() => setIsOpen(false)}>
-            <Button variant="primary" className="w-full">
-              Sign In
-            </Button>
-          </Link>
+          {authenticated ? (
+            <Link href={dashboardPath} onClick={() => setIsOpen(false)}>
+              <Button variant="primary" className="w-full bg-[#FF6B35] hover:bg-[#FF6B35]/90 border-none text-white font-bold flex items-center justify-center gap-2">
+                <LayoutDashboard className="w-4 h-4" />
+                Dashboard
+              </Button>
+            </Link>
+          ) : (
+            <Link href="/auth" onClick={() => setIsOpen(false)}>
+              <Button variant="primary" className="w-full bg-[#FF6B35] hover:bg-[#FF6B35]/90 border-none text-white font-bold">
+                Get Started
+              </Button>
+            </Link>
+          )}
         </div>
       )}
     </>
