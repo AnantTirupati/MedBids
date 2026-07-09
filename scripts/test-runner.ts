@@ -1,5 +1,5 @@
 process.env.NEXT_PUBLIC_USE_FIREBASE = "mock";
-process.env.NEXT_PUBLIC_FIREBASE_API_KEY = "AIzaSyDummyKeyForTestingPurposesOnly123";
+process.env.NEXT_PUBLIC_FIREBASE_API_KEY = "dummy-firebase-api-key";
 process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN = "dummy-auth-domain";
 process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID = "dummy-project-id";
 process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET = "dummy-storage-bucket";
