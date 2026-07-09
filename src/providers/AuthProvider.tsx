@@ -96,6 +96,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       }
 
+      if (userProfile && userProfile.role === UserRole.PHARMACY) {
+        try {
+          const { pharmacyRepository } = await import("@/repositories");
+          const pharmacyProfile = await pharmacyRepository.getPharmacyById(currentUser.uid);
+          if (pharmacyProfile) {
+            userProfile = {
+              ...userProfile,
+              ...pharmacyProfile,
+            };
+          }
+        } catch (err) {
+          console.error("Failed to load pharmacy profile details:", err);
+        }
+      }
+
       setProfile(userProfile);
       setRole(userProfile.role);
       setAuthCookies(currentUser.uid, userProfile.role);
