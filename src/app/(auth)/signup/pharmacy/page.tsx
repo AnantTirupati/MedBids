@@ -3,10 +3,10 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { HeartPulse, Award, FileText, ArrowRight, Upload } from "lucide-react";
+import { Award, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardHeader, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { UploadArea } from "@/components/shared/upload-area";
 import { useAuth } from "@/hooks/useAuth";
 import { pharmacyRepository, verificationRepository } from "@/repositories";
@@ -31,7 +31,7 @@ export default function PharmacyOnboardingPage() {
   React.useEffect(() => {
     if (!authLoading && !user) {
       router.push("/auth/pharmacy/signup");
-    } else if (!authLoading && profile && profile.role === "pharmacy" && "verification_status" in profile && (profile as any).verification_status === "approved") {
+    } else if (!authLoading && profile && profile.role === "pharmacy" && "verification_status" in profile && (profile as Pharmacy).verification_status === "approved") {
       router.push("/dashboard/pharmacy");
     }
   }, [user, profile, authLoading, router]);
