@@ -10,12 +10,18 @@ export function useUpload() {
   const [error, setError] = React.useState<Error | null>(null);
   const [success, setSuccess] = React.useState(false);
 
-  const uploadPrescription = async (patientId: string, patientName: string, notes?: string, medications?: Omit<Medication, "id">[]) => {
+  const uploadPrescription = async (
+    patientId: string,
+    patientName: string,
+    notes?: string,
+    medications?: Omit<Medication, "id">[],
+    file?: File
+  ) => {
     setLoading(true);
     setError(null);
     setSuccess(false);
     try {
-      const rx = await patientService.uploadPrescription(patientId, patientName, notes, medications);
+      const rx = await patientService.uploadPrescription(patientId, patientName, notes, medications, file);
       setSuccess(true);
       return rx;
     } catch (err) {

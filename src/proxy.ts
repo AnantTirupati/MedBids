@@ -7,7 +7,7 @@ export default async function proxy(request: NextRequest) {
   const uidCookie = request.cookies.get("medbids-uid")?.value;
   const roleCookie = request.cookies.get("medbids-role")?.value;
 
-  const isAuthRoute = pathname.startsWith("/login") || pathname.startsWith("/signup");
+  const isAuthRoute = pathname.startsWith("/login") || (pathname.startsWith("/signup") && pathname !== "/signup/pharmacy");
   const isDashboardRoute = pathname.startsWith("/dashboard");
 
   // 1. Unauthenticated users trying to access protected dashboard routes

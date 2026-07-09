@@ -84,15 +84,39 @@ export const patientService = {
     patientId: string,
     patientName: string,
     notes?: string,
-    medications?: Omit<Medication, "id">[]
+    medications?: Omit<Medication, "id">[],
+    prescriptionFile?: File
   ): Promise<Prescription> {
     await getRandomDelay();
+
+    let prescription_image_url: string | null = null;
+    if (prescriptionFile) {
+      if (process.env.NEXT_PUBLIC_USE_FIREBASE === "firebase") {
+        try {
+          const { storageHelper } = await import("@/lib/firebase/storage");
+          const path = storageHelper.generateStoragePath("prescriptions", prescriptionFile.name);
+          prescription_image_url = await storageHelper.uploadFile(prescriptionFile, path);
+        } catch (err) {
+          console.error("Firebase storage upload failed, falling back to base64:", err);
+        }
+      }
+
+      if (!prescription_image_url) {
+        prescription_image_url = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.onerror = (error) => reject(error);
+          reader.readAsDataURL(prescriptionFile);
+        });
+      }
+    }
+
     const newRx: Prescription = {
       id: `rx_${Math.random().toString(36).substr(2, 9)}`,
       patient_id: patientId,
       patient_name: patientName,
       status: PrescriptionStatus.PENDING_VERIFICATION,
-      prescription_image_url: null,
+      prescription_image_url,
       doctor_name: "Dr. Self",
       hospital_name: "Home",
       notes: notes || null,

@@ -8,10 +8,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { UploadArea } from "@/components/shared/upload-area";
+import { useAuth } from "@/hooks/useAuth";
+import { pharmacyRepository, verificationRepository } from "@/repositories";
+import { UserRole, Pharmacy, VerificationRequest, VerificationStatus } from "@/types";
 
 export default function PharmacyOnboardingPage() {
   const router = useRouter();
+  const { user, profile, loading: authLoading, refresh } = useAuth();
   const [step, setStep] = React.useState(1);
+  const [submitting, setSubmitting] = React.useState(false);
   const [formData, setFormData] = React.useState({
     pharmacyName: "",
     licenseNumber: "",
@@ -22,6 +27,14 @@ export default function PharmacyOnboardingPage() {
   });
 
   const [licenseFile, setLicenseFile] = React.useState<File | null>(null);
+
+  React.useEffect(() => {
+    if (!authLoading && !user) {
+      router.push("/auth/pharmacy/signup");
+    } else if (!authLoading && profile && profile.role === "pharmacy" && "verification_status" in profile && (profile as any).verification_status === "approved") {
+      router.push("/dashboard/pharmacy");
+    }
+  }, [user, profile, authLoading, router]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -38,22 +51,100 @@ export default function PharmacyOnboardingPage() {
     }
   };
 
-  const handleFormSubmit = (e: React.FormEvent) => {
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!licenseFile) return;
+    if (!licenseFile || !user?.uid) return;
 
-    if (typeof window !== "undefined") {
-      sessionStorage.setItem(
-        "medbids_onboarding_pharmacy",
-        JSON.stringify({
-          ...formData,
-          licenseFileUrl: "mock_license_url",
-        })
-      );
+    setSubmitting(true);
+    try {
+      let licenseFileUrl = "mock_license_url";
+      if (licenseFile) {
+        if (process.env.NEXT_PUBLIC_USE_FIREBASE === "firebase") {
+          try {
+            const { storageHelper } = await import("@/lib/firebase/storage");
+            const path = storageHelper.generateStoragePath("licenses", licenseFile.name);
+            licenseFileUrl = await storageHelper.uploadFile(licenseFile, path);
+          } catch (err) {
+            console.error("Firebase license upload failed, falling back to mock:", err);
+          }
+        } else {
+          licenseFileUrl = await new Promise<string>((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.readAsDataURL(licenseFile);
+          });
+        }
+      }
+
+      const isoString = new Date().toISOString();
+
+      // 1. Create/Update Pharmacy document
+      const newPharmacy: Pharmacy = {
+        id: user.uid,
+        email: user.email || "",
+        phone: user.phoneNumber || profile?.phone || "",
+        role: UserRole.PHARMACY,
+        full_name: profile?.full_name || formData.pharmacyName,
+        avatar_url: profile?.avatar_url || null,
+        created_at: profile?.created_at || isoString,
+        updated_at: isoString,
+        is_active: true,
+        pharmacy_name: formData.pharmacyName,
+        license_number: formData.licenseNumber,
+        gst_number: formData.gstNumber || null,
+        address: formData.address,
+        city: formData.city,
+        state: "Telangana",
+        pincode: formData.pincode,
+        license_expiry: "2029-12-31",
+        rating: 5.0,
+        verification_status: VerificationStatus.PENDING,
+        total_bids: 0,
+        successful_bids: 0,
+        response_time_avg: "10m",
+        established_year: new Date().getFullYear(),
+      };
+      await pharmacyRepository.updatePharmacy(newPharmacy);
+
+      // 2. Create Verification request document
+      const newRequest: VerificationRequest = {
+        id: `ver_${Math.random().toString(36).substring(2, 11)}`,
+        pharmacy_id: user.uid,
+        pharmacy: newPharmacy,
+        submitted_at: isoString,
+        reviewed_at: null,
+        reviewed_by: null,
+        status: VerificationStatus.PENDING,
+        documents: {
+          license_url: licenseFileUrl,
+          gst_certificate_url: null,
+          address_proof_url: null,
+        },
+        notes: null,
+      };
+      await verificationRepository.updateRequest(newRequest);
+
+      sessionStorage.removeItem("medbids_onboarding_pharmacy");
+
+      await refresh();
+      router.push("/dashboard/pharmacy");
+    } catch (err) {
+      console.error("Onboarding submission failed:", err);
+    } finally {
+      setSubmitting(false);
     }
-
-    router.push("/auth/pharmacy/signup");
   };
+
+  if (authLoading || (user && !profile)) {
+    return (
+      <div className="min-h-screen bg-[#0B0F19] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-primary"></div>
+          <p className="text-body-sm text-on-surface-variant">Loading onboarding portal...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <Card className="auth-card w-full max-w-lg p-6 md:p-8 relative z-10 shadow-2xl flex flex-col bg-[#141A24]/90 border border-outline-variant/20 rounded-2xl relative overflow-hidden backdrop-blur-md select-none">
@@ -169,10 +260,10 @@ export default function PharmacyOnboardingPage() {
             <Button
               type="submit"
               variant="primary"
-              disabled={!licenseFile}
+              disabled={!licenseFile || submitting}
               className="w-2/3 flex items-center justify-center gap-2"
             >
-              <span>Submit Registration</span>
+              <span>{submitting ? "Submitting..." : "Submit Registration"}</span>
               <ArrowRight className="w-4 h-4" />
             </Button>
           </div>

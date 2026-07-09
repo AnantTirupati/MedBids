@@ -188,6 +188,57 @@ export default function AdminPrescriptionModerationPage() {
                   <p className="italic leading-relaxed">{selectedRx.notes}</p>
                 </div>
               )}
+
+              {/* Prescription Document Preview */}
+              <div className="flex flex-col gap-2 pt-4 border-t border-[#273244]/40">
+                <p className="font-semibold text-on-surface text-label-md uppercase tracking-wider">Prescription Document</p>
+                {selectedRx.prescription_image_url ? (
+                  selectedRx.prescription_image_url.toLowerCase().endsWith(".pdf") ||
+                  selectedRx.prescription_image_url.startsWith("data:application/pdf") ? (
+                    <div className="flex items-center gap-3 p-4 rounded-lg bg-surface-container border border-outline-variant/30 hover:border-primary/40 transition-colors">
+                      <div className="w-10 h-10 rounded bg-[#ffb4ab]/10 text-error flex items-center justify-center font-bold">
+                        PDF
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-body-sm font-semibold text-on-surface truncate">
+                          prescription_document.pdf
+                        </p>
+                        <p className="text-[12px] text-text-muted">Click to open document</p>
+                      </div>
+                      <a
+                        href={selectedRx.prescription_image_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="h-8 px-3 rounded-button bg-surface-container-highest border border-outline-variant/30 text-on-surface hover:text-primary hover:border-primary text-[12px] font-semibold flex items-center transition-colors"
+                      >
+                        Open File
+                      </a>
+                    </div>
+                  ) : (
+                    <div className="relative group overflow-hidden rounded-lg border border-[#273244] bg-[#111827] flex flex-col items-center justify-center p-2 min-h-[160px] max-h-[300px]">
+                      <img
+                        src={selectedRx.prescription_image_url}
+                        alt="Uploaded Prescription"
+                        className="max-w-full max-h-[280px] object-contain rounded-md transition-transform duration-300 group-hover:scale-[1.02]"
+                      />
+                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                        <a
+                          href={selectedRx.prescription_image_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="bg-primary text-on-primary hover:bg-primary-container px-3.5 py-2 rounded-button text-[12px] font-semibold flex items-center gap-1.5 transition-colors"
+                        >
+                          Open Full Image
+                        </a>
+                      </div>
+                    </div>
+                  )
+                ) : (
+                  <div className="rounded-lg border border-dashed border-outline-variant/40 p-4 text-center text-body-xs text-text-muted bg-surface-container-low/40">
+                    No document file attached (Manual Entry).
+                  </div>
+                )}
+              </div>
             </div>
 
             <DialogFooter className="mt-4">

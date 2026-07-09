@@ -39,7 +39,8 @@ export default function UploadPrescriptionPage() {
             quantity: 1,
             frequency: null,
           },
-        ]
+        ],
+        file
       );
       router.push("/dashboard/patient");
     } catch (err) {

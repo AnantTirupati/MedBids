@@ -19,7 +19,6 @@ export default function PharmacySignupPage() {
   const redirectPath = searchParams.get("redirect") || "/dashboard/pharmacy";
   const { refresh } = useAuth();
 
-  const [hasOnboardingData, setHasOnboardingData] = React.useState<boolean | null>(null);
   const [fullName, setFullName] = React.useState("");
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
@@ -31,24 +30,10 @@ export default function PharmacySignupPage() {
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState("");
 
-  React.useEffect(() => {
-    if (typeof window !== "undefined") {
-      const data = sessionStorage.getItem("medbids_onboarding_pharmacy");
-      const timer = setTimeout(() => {
-        setHasOnboardingData(!!data);
-      }, 0);
-      return () => clearTimeout(timer);
-    }
-  }, []);
-
   const createPharmacyProfile = async (uid: string, userEmail: string) => {
     const exists = await userRepository.profileExists(uid);
     if (exists) return;
 
-    const rawData = sessionStorage.getItem("medbids_onboarding_pharmacy");
-    if (!rawData) return;
-
-    const onboarding = JSON.parse(rawData);
     const isoString = new Date().toISOString();
 
     // 1. User document
@@ -57,62 +42,13 @@ export default function PharmacySignupPage() {
       email: userEmail.toLowerCase().trim(),
       phone: phone || "",
       role: UserRole.PHARMACY,
-      full_name: fullName.trim() || onboarding.pharmacyName,
+      full_name: fullName.trim(),
       avatar_url: null,
       created_at: isoString,
       updated_at: isoString,
       is_active: true,
     };
     await userRepository.createProfile(newUser);
-
-    // 2. Pharmacy document
-    const newPharmacy: Pharmacy = {
-      id: uid,
-      email: userEmail.toLowerCase().trim(),
-      phone: phone || "",
-      role: UserRole.PHARMACY,
-      full_name: fullName.trim() || onboarding.pharmacyName,
-      avatar_url: null,
-      created_at: isoString,
-      updated_at: isoString,
-      is_active: true,
-      pharmacy_name: onboarding.pharmacyName,
-      license_number: onboarding.licenseNumber,
-      gst_number: onboarding.gstNumber || null,
-      address: onboarding.address,
-      city: onboarding.city,
-      state: "Telangana",
-      pincode: onboarding.pincode,
-      license_expiry: "2029-12-31",
-      rating: 5.0,
-      verification_status: VerificationStatus.PENDING,
-      total_bids: 0,
-      successful_bids: 0,
-      response_time_avg: "10m",
-      established_year: new Date().getFullYear(),
-    };
-    await pharmacyRepository.updatePharmacy(newPharmacy);
-
-    // 3. Verification request document
-    const newRequest: VerificationRequest = {
-      id: `ver_${Math.random().toString(36).substring(2, 11)}`,
-      pharmacy_id: uid,
-      pharmacy: newPharmacy,
-      submitted_at: isoString,
-      reviewed_at: null,
-      reviewed_by: null,
-      status: VerificationStatus.PENDING,
-      documents: {
-        license_url: onboarding.licenseFileUrl,
-        gst_certificate_url: null,
-        address_proof_url: null,
-      },
-      notes: null,
-    };
-    await verificationRepository.updateRequest(newRequest);
-
-    // Clean up onboarding session data
-    sessionStorage.removeItem("medbids_onboarding_pharmacy");
   };
 
   const handleSignupSubmit = async (e: React.FormEvent) => {
@@ -131,7 +67,7 @@ export default function PharmacySignupPage() {
     try {
       const user = await authService.signUpWithEmail(email, password);
       
-      // Store profiles and verification requests
+      // Store base user profile
       await createPharmacyProfile(user.uid, email);
 
       // Verification email dispatch
@@ -142,7 +78,7 @@ export default function PharmacySignupPage() {
       }
 
       await refresh();
-      router.push(redirectPath);
+      router.push("/signup/pharmacy");
     } catch (err: unknown) {
       const errorObj = err as Error;
       setError(errorObj?.message || "Registration failed. Please check your inputs.");
@@ -157,11 +93,11 @@ export default function PharmacySignupPage() {
     try {
       const user = await authService.signInWithGoogle();
       
-      // Store profiles and verification requests if onboarding data exists
+      // Store base user profile
       await createPharmacyProfile(user.uid, user.email || "");
 
       await refresh();
-      router.push(redirectPath);
+      router.push("/signup/pharmacy");
     } catch (err: unknown) {
       const errorObj = err as Error;
       setError(errorObj?.message || "Google Authentication failed. Please try again.");
@@ -169,36 +105,6 @@ export default function PharmacySignupPage() {
       setLoading(false);
     }
   };
-
-  if (hasOnboardingData === null) {
-    return (
-      <Card className="auth-card w-full max-w-[480px] p-6 md:p-8 flex items-center justify-center bg-[#141A24]/90 border border-outline-variant/20 rounded-2xl relative overflow-hidden backdrop-blur-md">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
-      </Card>
-    );
-  }
-
-  if (!hasOnboardingData) {
-    return (
-      <Card className="auth-card w-full max-w-[480px] p-6 md:p-8 shadow-2xl flex flex-col items-center select-none bg-[#141A24]/90 border border-outline-variant/20 rounded-2xl relative overflow-hidden backdrop-blur-md text-center">
-        <div className="h-12 w-12 rounded-full bg-red-950/30 flex items-center justify-center mb-4 border border-red-500/20 text-red-500">
-          <FileWarning className="w-6 h-6" />
-        </div>
-        <h2 className="text-headline-sm font-bold text-on-surface">Registration Sequence Paused</h2>
-        <p className="text-body-sm text-on-surface-variant mt-2 leading-relaxed">
-          Pharmacy accounts require license and location registration before credentials can be setup.
-        </p>
-        <Link href="/signup/pharmacy" className="w-full mt-6">
-          <Button variant="primary" className="w-full h-12 bg-[#FF6B35] hover:bg-[#FF6B35]/90 border-none text-white font-bold">
-            Register Pharmacy Profile
-          </Button>
-        </Link>
-        <Link href="/auth" className="text-body-sm text-[#FF6B35] mt-4 hover:underline">
-          Go Back to Role Selection
-        </Link>
-      </Card>
-    );
-  }
 
   return (
     <Card className="auth-card w-full max-w-[480px] p-6 md:p-8 shadow-2xl flex flex-col items-center select-none bg-[#141A24]/90 border border-outline-variant/20 rounded-2xl relative overflow-hidden backdrop-blur-md">
